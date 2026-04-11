@@ -1,4 +1,4 @@
-let siteContent = null;
+let siteContent = window.__INITIAL_SITE_CONTENT__ || null;
 let phrases = [];
 let phraseIndex = 0;
 let charIndex = 0;
@@ -1011,6 +1011,10 @@ function setupBlogView() {
 }
 
 async function loadContent() {
+  if (siteContent) {
+    return siteContent;
+  }
+
   const response = await fetch("/api/content");
   if (!response.ok) {
     throw new Error("站点内容加载失败");

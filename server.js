@@ -190,6 +190,10 @@ app.use((req, res, next) => {
   return next();
 });
 
+app.get(["/", "/index.html"], (_req, res) => {
+  res.type("html").send(renderIndexHtml());
+});
+
 app.use(express.static(PUBLIC_DIR));
 
 function ensureJsonFile(filePath, fallbackValue, seedFilePath) {
@@ -223,6 +227,42 @@ function readJson(filePath, fallbackValue, seedFilePath) {
 function writeJson(filePath, data) {
   ensureJsonFile(filePath, data);
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function serializeForInlineScript(value) {
+  return JSON.stringify(value)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}
+
+function renderIndexHtml() {
+  const templatePath = path.join(PUBLIC_DIR, "index.html");
+  const template = fs.readFileSync(templatePath, "utf8");
+  const content = readJson(CONTENT_PATH, {}, DEFAULT_CONTENT_PATH);
+  const siteName = content?.site?.name || "PersonBlog";
+  const siteLogo = content?.site?.logo || "PB";
+  const siteTitleSuffix = content?.site?.titleSuffix || "个人主页";
+  const siteDescription = content?.site?.description || "";
+  const siteTitle = `${siteName} | ${siteTitleSuffix}`;
+
+  return template
+    .replaceAll("__SITE_TITLE__", escapeHtml(siteTitle))
+    .replaceAll("__SITE_DESCRIPTION__", escapeHtml(siteDescription))
+    .replaceAll("__SITE_LOGO__", escapeHtml(siteLogo))
+    .replaceAll("__SITE_NAME__", escapeHtml(siteName))
+    .replace("__INITIAL_SITE_CONTENT_JSON__", serializeForInlineScript(content));
 }
 
 function defaultPrivateAiConfig() {
@@ -668,7 +708,7 @@ app.get("/admin", requireAdminAuth, (_req, res) => {
 });
 
 app.get(/^(?!\/api\/).*/, (_req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+  res.type("html").send(renderIndexHtml());
 });
 
 ensureRuntimeStorage();

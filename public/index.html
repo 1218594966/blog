@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI 兴趣主页</title>
-  <meta name="description" content="一个记录 AI 工具、提示词、自动化与个人学习兴趣的中文个人网站。">
-  <meta property="og:title" content="AI 兴趣主页">
-  <meta property="og:description" content="一个记录 AI 工具、提示词、自动化与个人学习兴趣的中文个人网站。">
+  <title>__SITE_TITLE__</title>
+  <meta name="description" content="__SITE_DESCRIPTION__">
+  <meta property="og:title" content="__SITE_TITLE__">
+  <meta property="og:description" content="__SITE_DESCRIPTION__">
   <meta property="og:type" content="website">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,7 +16,7 @@
 <body>
   <div class="scroll-progress"><span id="scrollProgress"></span></div>
   <div id="loader">
-    <div class="loader-logo" id="loaderLogo">CW</div>
+    <div class="loader-logo" id="loaderLogo">__SITE_LOGO__</div>
     <div class="loader-bar"></div>
     <div class="loader-percent">0%</div>
   </div>
@@ -28,7 +28,7 @@
   <div class="ambient-glow glow-2"></div>
 
   <nav class="nav" id="nav">
-    <a href="#hero" class="nav-logo" id="navLogo">CW</a>
+    <a href="#hero" class="nav-logo" id="navLogo">__SITE_LOGO__</a>
     <ul class="nav-links" id="navLinks"></ul>
     <button class="nav-hamburger" id="hamburger" aria-label="打开菜单">
       <span></span>
@@ -86,7 +86,7 @@
     <div class="about-grid">
       <div class="about-image-wrapper reveal stagger-1">
         <div class="about-image">
-          <div class="about-image-placeholder" id="aboutImagePlaceholder">CW</div>
+          <div class="about-image-placeholder" id="aboutImagePlaceholder">__SITE_LOGO__</div>
         </div>
         <div class="about-image-glow"></div>
         <div class="about-decoration"></div>
@@ -220,7 +220,7 @@
 
   <footer class="footer">
     <div class="footer-content">
-      <div class="footer-logo" id="footerLogo">陈惟</div>
+      <div class="footer-logo" id="footerLogo">__SITE_NAME__</div>
       <div class="footer-text" id="footerText"></div>
       <div class="footer-links">
         <a href="#" id="footerPrivacy">隐私说明</a>
@@ -240,6 +240,9 @@
     </div>
   </div>
 
+  <script>
+    window.__INITIAL_SITE_CONTENT__ = __INITIAL_SITE_CONTENT_JSON__;
+  </script>
   <script src="/assets/site.js"></script>
 </body>
 </html>
