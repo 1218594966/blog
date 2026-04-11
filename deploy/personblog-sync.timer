@@ -1,0 +1,10 @@
+[Unit]
+Description=Check GitHub for personblog updates
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=2min
+Unit=personblog-sync.service
+
+[Install]
+WantedBy=timers.target

@@ -1,60 +1,49 @@
-# PersonBlog 部署说明
+# 部署说明
 
-这份项目已经整理成适合 `Ubuntu + Node.js + PM2 + Nginx` 的线上版本，域名按 `xuxinyuan.xyz` 预设。
+这份项目已经整理成适合 `Ubuntu + Node.js + PM2 + Nginx` 的线上版本。
 
-## 部署目标
+当前推荐部署信息：
 
 - 仓库地址：`https://github.com/1218594966/blog.git`
-- 线上目录：`/var/www/personblog`
-- 站点域名：`xuxinyuan.xyz`
-- 备用域名：`www.xuxinyuan.xyz`
+- 项目目录：`/var/www/personblog`
+- 域名：`xuxinyuan.xyz`
 - 进程管理：`PM2`
 - 反向代理：`Nginx`
+- CDN / 证书：`Cloudflare`
 
-## 一键基础部署
-
-服务器建议使用 `Ubuntu 22.04` 或更高版本，使用 `root` 执行：
+## 一次性部署
 
 ```bash
-apt update
-apt install -y git
-git clone https://github.com/1218594966/blog.git /var/www/personblog
+cd /var/www
+git clone https://github.com/1218594966/blog.git personblog
 cd /var/www/personblog
-chmod +x deploy/setup-ubuntu.sh
-./deploy/setup-ubuntu.sh
+cp .env.example .env
+npm install --production
+pm2 start ecosystem.config.cjs --update-env
+pm2 save
+pm2 startup
 ```
-
-这个脚本会完成：
-
-- 安装 Node.js 20、Nginx、Certbot、PM2
-- 从 GitHub 拉取项目
-- 安装依赖
-- 创建 `.env`
-- 启动 `personblog`
-- 执行 `pm2 save`
-- 配置 `pm2 startup`，确保服务器重启后自动恢复
-- 写入 Nginx 配置
 
 ## 环境变量
 
-第一次部署后，请编辑：
+编辑：
 
 ```bash
 nano /var/www/personblog/.env
 ```
 
-推荐至少修改这些值：
+建议至少设置：
 
 ```env
 NODE_ENV=production
 PORT=3000
 ADMIN_USERNAME=1218594966
-ADMIN_PASSWORD=3919799439
-SESSION_SECRET=换成一段很长很随机的字符串
+ADMIN_PASSWORD=请改成更安全的密码
+SESSION_SECRET=请改成一段更长更随机的字符串
 SITE_URL=https://xuxinyuan.xyz
 ```
 
-改完后重启应用：
+更新环境变量后，执行：
 
 ```bash
 cd /var/www/personblog
@@ -62,59 +51,61 @@ pm2 restart personblog --update-env
 pm2 save
 ```
 
-## HTTPS
+## Nginx
 
-域名解析到服务器公网 IP 后，执行：
+`xuxinyuan.xyz` 的站点配置可以直接使用：
 
 ```bash
-certbot --nginx -d xuxinyuan.xyz -d www.xuxinyuan.xyz
+sudo cp /var/www/personblog/deploy/nginx.personblog.conf /etc/nginx/sites-available/xuxinyuan.xyz
+sudo ln -sf /etc/nginx/sites-available/xuxinyuan.xyz /etc/nginx/sites-enabled/xuxinyuan.xyz
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
-成功后可访问：
-
-- 前台：`https://xuxinyuan.xyz`
-- 后台登录：`https://xuxinyuan.xyz/admin-login`
+如果你已经有 Cloudflare 证书，建议把证书路径改成自己的现有路径。
 
 ## 服务器重启后自动恢复
 
-这套项目已经通过 `PM2 + systemd startup` 处理自动恢复。
+项目已经通过 `PM2 + systemd startup` 实现自动恢复。
 
-你可以用下面命令确认：
+确认命令：
 
 ```bash
 pm2 status
 systemctl status pm2-root
 ```
 
-只要之前执行过：
+## 手动更新
 
-```bash
-pm2 save
-pm2 startup systemd -u root --hp /root
-```
-
-服务器重启后，项目会自动拉起，不会因为重启就掉站。
-
-## 后续更新
-
-以后本地修改并推送到 GitHub 后，服务器只要执行：
+本地推送到 GitHub 后，服务器手动更新只需要：
 
 ```bash
 cd /var/www/personblog
-chmod +x deploy/update-from-github.sh
 ./deploy/update-from-github.sh
 ```
 
-这个脚本会自动：
+## 自动同步 GitHub
 
-- `git pull`
-- 安装新增依赖
-- 重启 PM2
-- 保存当前 PM2 进程列表
+仓库内已经提供了自动同步脚本与 systemd timer：
 
-## 数据存储说明
+- `deploy/sync-from-github.sh`
+- `deploy/personblog-sync.service`
+- `deploy/personblog-sync.timer`
 
-线上运行时数据会写入：
+启用方式：
+
+```bash
+sudo cp /var/www/personblog/deploy/personblog-sync.service /etc/systemd/system/
+sudo cp /var/www/personblog/deploy/personblog-sync.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now personblog-sync.timer
+```
+
+启用后，服务器会按固定频率检查 GitHub `main` 是否有更新；如果有，就自动拉取、校验并重启项目。
+
+## 数据与密钥
+
+运行时数据保存在：
 
 ```text
 /var/www/personblog/storage
@@ -122,17 +113,8 @@ chmod +x deploy/update-from-github.sh
 
 这里包括：
 
-- 站点编辑内容
+- 后台编辑后的站点内容
 - 留言数据
 - AI 私密配置
 
-这些文件已经从 Git 跟踪中分离，所以你在后台改内容后，后续 `git pull` 不会轻易和运行时数据冲突。
-
-## 健康检查
-
-可用下面命令确认应用是否在线：
-
-```bash
-curl http://127.0.0.1:3000/api/health
-curl https://xuxinyuan.xyz/api/health
-```
+这些内容不受 `git pull` 影响，所以你后续更新代码时，不需要每次重新配置 AI Key。

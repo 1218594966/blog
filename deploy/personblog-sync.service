@@ -1,0 +1,9 @@
+[Unit]
+Description=Sync personblog from GitHub
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/www/personblog
+ExecStart=/bin/bash /var/www/personblog/deploy/sync-from-github.sh

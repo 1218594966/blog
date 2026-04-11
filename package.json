@@ -1,7 +1,7 @@
 {
   "name": "personblog",
   "version": "1.0.0",
-  "description": "可部署的个人品牌展示站，含前台展示、内容管理后台与留言保存接口。",
+  "description": "可部署的个人介绍与 Blog 网站，包含前台展示、后台编辑与 AI 对话能力。",
   "main": "server.js",
   "scripts": {
     "dev": "node server.js",
