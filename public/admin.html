@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>内容管理后台</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/admin.css">
+</head>
+<body>
+  <main class="admin-shell">
+    <aside class="admin-sidebar">
+      <h1>内容管理</h1>
+      <p>这里可以直接改站点里的名字、标题、简介、项目、文章、社交链接和联系方式，保存后前台会立即读取新内容。</p>
+      <a href="/" class="admin-link">返回前台首页</a>
+      <form method="post" action="/admin-logout">
+        <button type="submit" class="admin-link admin-link-secondary">退出后台</button>
+      </form>
+    </aside>
+
+    <section class="admin-main">
+      <div class="admin-card">
+        <h2>基础信息</h2>
+        <div class="admin-grid">
+          <label>姓名<input id="siteName" type="text"></label>
+          <label>Logo 简写<input id="siteLogo" type="text"></label>
+          <label>站点标题后缀<input id="siteTitleSuffix" type="text"></label>
+          <label>页面语言<input id="siteLanguage" type="text"></label>
+        </div>
+        <label>站点描述
+          <textarea id="siteDescription" rows="3"></textarea>
+        </label>
+      </div>
+
+      <div class="admin-card">
+        <h2>首页首屏</h2>
+        <div class="admin-grid">
+          <label>顶部标签<input id="heroLabel" type="text"></label>
+          <label>标题前半句<input id="heroPrefix" type="text"></label>
+          <label>高亮名字<input id="heroHighlight" type="text"></label>
+          <label>标题后半句<input id="heroSuffix" type="text"></label>
+        </div>
+        <label>打字轮播文案
+          <textarea id="heroTyped" rows="5"></textarea>
+        </label>
+        <label>首页标签
+          <textarea id="heroTags" rows="4"></textarea>
+        </label>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>AI 对话区配置</h2>
+          <button id="refreshAiModelsBtn" type="button" class="ghost-btn">读取模型</button>
+        </div>
+        <div class="admin-grid">
+          <label>是否启用
+            <select id="aiEnabled">
+              <option value="true">启用</option>
+              <option value="false">关闭</option>
+            </select>
+          </label>
+          <label>OpenAI 兼容接口地址<input id="aiBaseUrl" type="text" placeholder="例如 https://api.openai.com/v1"></label>
+          <label>API Key<input id="aiApiKey" type="password" placeholder="请输入 API Key"></label>
+          <label>默认模型
+            <select id="aiModel"></select>
+          </label>
+          <label>顶部标题<input id="aiSectionTitle" type="text"></label>
+          <label>区域说明<input id="aiSectionDescription" type="text"></label>
+          <label>温度参数<input id="aiTemperature" type="number" min="0" max="2" step="0.1"></label>
+          <label>最大输出 Token<input id="aiMaxTokens" type="number" min="1" step="1"></label>
+        </div>
+        <label>系统提示词
+          <textarea id="aiSystemPrompt" rows="4"></textarea>
+        </label>
+        <label>输入框占位文案
+          <textarea id="aiPlaceholder" rows="3"></textarea>
+        </label>
+        <div class="admin-inline-status" id="aiStatus"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>当前关注方向</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="focuses">新增卡片</button>
+        </div>
+        <div id="focusesEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>关于我</h2>
+        <label>标题
+          <textarea id="aboutHeading" rows="3"></textarea>
+        </label>
+        <label>正文段落
+          <textarea id="aboutParagraphs" rows="6"></textarea>
+        </label>
+        <label>高亮标签
+          <textarea id="aboutHighlights" rows="4"></textarea>
+        </label>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>导航菜单</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="navigation">新增导航</button>
+        </div>
+        <div id="navigationEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>数据指标</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="stats">新增指标</button>
+        </div>
+        <div id="statsEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>技能进度</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="skills">新增技能</button>
+        </div>
+        <div id="skillsEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>项目作品</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="projects">新增项目</button>
+        </div>
+        <div id="projectsEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>经历时间线</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="experience">新增经历</button>
+        </div>
+        <div id="experienceEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>文章列表</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="blog">新增文章</button>
+        </div>
+        <div id="blogEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>合作反馈</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="testimonials">新增评价</button>
+        </div>
+        <div id="testimonialsEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>联系信息</h2>
+        <div class="admin-grid">
+          <label>联系标题<input id="contactHeading" type="text"></label>
+          <label>邮箱<input id="contactEmail" type="text"></label>
+          <label>电话<input id="contactPhone" type="text"></label>
+          <label>地址<input id="contactLocation" type="text"></label>
+        </div>
+        <label>联系说明
+          <textarea id="contactDescription" rows="4"></textarea>
+        </label>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>社交入口</h2>
+          <button type="button" class="ghost-btn" data-add-repeater="socials">新增社交入口</button>
+        </div>
+        <div id="socialsEditor" class="repeater-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>访客留言</h2>
+          <button id="refreshMessagesBtn" type="button" class="ghost-btn">刷新留言</button>
+        </div>
+        <div id="messagesList" class="message-list"></div>
+      </div>
+
+      <div class="admin-card">
+        <h2>高级内容 JSON</h2>
+        <p>如果你想一次性批量改内容，也可以直接编辑完整 JSON。保存时会进行基础结构校验。</p>
+        <textarea id="rawJson" rows="28"></textarea>
+      </div>
+
+      <div class="admin-actions">
+        <button id="refreshBtn" type="button">重新载入</button>
+        <button id="saveBtn" type="button" class="primary">保存内容</button>
+        <span id="saveStatus"></span>
+      </div>
+    </section>
+  </main>
+
+  <script src="/assets/admin.js"></script>
+</body>
+</html>

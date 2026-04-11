@@ -1,0 +1,25 @@
+{
+  "name": "personblog",
+  "version": "1.0.0",
+  "description": "可部署的个人品牌展示站，含前台展示、内容管理后台与留言保存接口。",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "check": "node --check server.js && node --check public/assets/site.js && node --check public/assets/admin.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
+    "pm2:restart": "pm2 restart ecosystem.config.cjs"
+  },
+  "keywords": [
+    "portfolio",
+    "blog",
+    "cms",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

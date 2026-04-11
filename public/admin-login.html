@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>后台登录</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&family=DM+Mono:wght@400;500&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/login.css">
+</head>
+<body>
+  <main class="login-shell">
+    <section class="login-card">
+      <div class="login-badge">内容后台</div>
+      <h1>登录后再编辑站点</h1>
+      <p>这里用于修改个人简介、AI 笔记、项目卡片和访客留言。为了部署到服务器更安全，后台现在需要密码。</p>
+      <div class="login-error" id="loginError" hidden>账号或密码不正确，请重新输入。</div>
+      <form method="post" action="/admin-login" class="login-form">
+        <label for="username">后台账号</label>
+        <input id="username" name="username" type="text" placeholder="请输入后台账号" required>
+        <label for="password">后台密码</label>
+        <input id="password" name="password" type="password" placeholder="请输入后台密码" required>
+        <button type="submit">进入后台</button>
+      </form>
+      <a href="/" class="login-back">返回前台首页</a>
+    </section>
+  </main>
+
+  <script>
+    const hasError = new URLSearchParams(window.location.search).get("error");
+    if (hasError) {
+      document.getElementById("loginError").hidden = false;
+    }
+  </script>
+</body>
+</html>

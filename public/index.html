@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 兴趣主页</title>
+  <meta name="description" content="一个记录 AI 工具、提示词、自动化与个人学习兴趣的中文个人网站。">
+  <meta property="og:title" content="AI 兴趣主页">
+  <meta property="og:description" content="一个记录 AI 工具、提示词、自动化与个人学习兴趣的中文个人网站。">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400&family=DM+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+  <div class="scroll-progress"><span id="scrollProgress"></span></div>
+  <div id="loader">
+    <div class="loader-logo" id="loaderLogo">CW</div>
+    <div class="loader-bar"></div>
+    <div class="loader-percent">0%</div>
+  </div>
+
+  <div class="cursor-dot" id="cursorDot"></div>
+  <div class="cursor-ring" id="cursorRing"></div>
+
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <nav class="nav" id="nav">
+    <a href="#hero" class="nav-logo" id="navLogo">CW</a>
+    <ul class="nav-links" id="navLinks"></ul>
+    <button class="nav-hamburger" id="hamburger" aria-label="打开菜单">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <section class="hero" id="hero">
+    <canvas id="particleCanvas"></canvas>
+    <div class="hero-content">
+      <div class="hero-label" id="heroLabel"></div>
+      <h1 class="hero-title">
+        <span id="heroPrefix"></span>
+        <span class="highlight" id="heroHighlight"></span>
+      </h1>
+      <div class="hero-subline" id="heroSuffix"></div>
+      <div class="hero-subtitle">
+        <span id="typed"></span><span class="typed-cursor">|</span>
+      </div>
+      <div class="hero-actions">
+        <a href="#blog" class="hero-action hero-action-primary">看看我的 AI 笔记</a>
+        <a href="#projects" class="hero-action">最近在研究什么</a>
+        <a href="#contact" class="hero-action">来和我交流</a>
+      </div>
+      <div class="hero-tags" id="heroTags"></div>
+    </div>
+    <div class="hero-scroll">
+      <span>向下滚动</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <div class="stats-bar reveal" id="statsBar"></div>
+
+  <div class="marquee-divider">
+    <div class="marquee-track" id="marqueeTrack"></div>
+  </div>
+
+  <section class="section section-compact" id="focuses">
+    <div class="section-header reveal">
+      <div class="section-number">00</div>
+      <h2 class="section-title">现在正在 <em>关注</em></h2>
+      <p class="section-desc">这三件事，基本构成了我最近对 AI 的主要兴趣方向。</p>
+    </div>
+    <div class="focus-grid" id="focusGrid"></div>
+  </section>
+
+  <section class="section" id="about">
+    <div class="section-header reveal">
+      <div class="section-number">01</div>
+      <h2 class="section-title">关于 <em>我</em></h2>
+      <p class="section-desc">这里更多是我的兴趣方向、学习方式，以及我最近在关注的 AI 话题。</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-image-wrapper reveal stagger-1">
+        <div class="about-image">
+          <div class="about-image-placeholder" id="aboutImagePlaceholder">CW</div>
+        </div>
+        <div class="about-image-glow"></div>
+        <div class="about-decoration"></div>
+      </div>
+      <div class="about-text reveal stagger-2">
+        <h3 id="aboutHeading"></h3>
+        <div id="aboutParagraphs"></div>
+        <div class="about-highlights" id="aboutHighlights"></div>
+        <div class="skills-grid" id="skillsGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="projects">
+    <div class="section-header reveal">
+      <div class="section-number">02</div>
+      <h2 class="section-title">最近在 <em>研究</em></h2>
+      <p class="section-desc">与其说是作品，不如说是我最近反复尝试、慢慢积累的几个 AI 方向。</p>
+    </div>
+    <div class="projects-filters reveal stagger-1" id="projectFilters"></div>
+    <div class="projects-grid" id="projectsGrid"></div>
+  </section>
+
+  <section class="section" id="experience">
+    <div class="section-header reveal">
+      <div class="section-number">03</div>
+      <h2 class="section-title">经历 <em>轨迹</em></h2>
+      <p class="section-desc">从最初接触 AI，到开始用工具解决真实问题，是一条慢慢积累的路线。</p>
+    </div>
+    <div class="timeline" id="experienceTimeline"></div>
+  </section>
+
+  <section class="section" id="blog">
+    <div class="section-header reveal">
+      <div class="section-number">04</div>
+      <h2 class="section-title">文章 <em>笔记</em></h2>
+      <p class="section-desc">主要记录我对 AI 工具、提示词、效率方法和新鲜想法的观察。</p>
+    </div>
+    <div class="blog-controls reveal stagger-1">
+      <div class="blog-control-title">查看方式</div>
+      <div class="blog-view-toggle">
+        <button class="view-btn active" data-view="grid" type="button">卡片</button>
+        <button class="view-btn" data-view="list" type="button">列表</button>
+      </div>
+    </div>
+    <div class="blog-grid" id="blogGrid"></div>
+  </section>
+
+  <section class="section" id="ai-lab">
+    <div class="section-header reveal">
+      <div class="section-number">05</div>
+      <h2 class="section-title"><span id="aiSectionTitle">AI 对话 <em>实验</em></span></h2>
+      <p class="section-desc" id="aiSectionDescription">这里可以接入 OpenAI 兼容模型。配置好接口地址后，网站会自动读取模型列表并支持直接对话。</p>
+    </div>
+    <div class="ai-lab-grid">
+      <div class="ai-lab-panel reveal stagger-1">
+        <div class="ai-lab-panel-title">当前模型</div>
+        <div class="ai-lab-config-row">
+          <select id="aiModelSelect"></select>
+          <button id="aiRefreshModels" type="button" class="view-btn">刷新模型</button>
+        </div>
+        <div class="ai-lab-status" id="aiStatusText"></div>
+        <div class="ai-lab-tips">
+          <span>支持 OpenAI 兼容接口</span>
+          <span>模型会根据配置的 URL 自动读取</span>
+        </div>
+      </div>
+      <div class="ai-chat reveal stagger-2">
+        <div class="ai-chat-messages" id="aiChatMessages"></div>
+        <form class="ai-chat-form" id="aiChatForm">
+          <textarea id="aiChatInput" rows="4" placeholder="想问点什么？"></textarea>
+          <div class="ai-chat-actions">
+            <button type="button" class="view-btn" id="aiClearChat">清空对话</button>
+            <button type="submit" class="submit-btn" id="aiSendBtn">发送问题</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="testimonials">
+    <div class="section-header reveal">
+      <div class="section-number">06</div>
+      <h2 class="section-title">交流 <em>印象</em></h2>
+      <p class="section-desc">这里放的是朋友、同学或一起交流过的人，对我和这些内容的一些印象。</p>
+    </div>
+    <div class="testimonials-wrapper reveal stagger-1">
+      <div class="testimonials-track" id="testimonialsTrack"></div>
+    </div>
+    <div class="testimonials-nav reveal stagger-2">
+      <button id="testPrev" type="button" aria-label="上一条">←</button>
+      <button id="testNext" type="button" aria-label="下一条">→</button>
+    </div>
+  </section>
+
+  <section class="section" id="contact">
+    <div class="section-header reveal">
+      <div class="section-number">07</div>
+      <h2 class="section-title">联系 <em>我</em></h2>
+      <p class="section-desc">如果你也对 AI、自动化、效率工具或者个人网站感兴趣，欢迎来聊。</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-info reveal stagger-1">
+        <h3 id="contactHeading"></h3>
+        <p id="contactDescription"></p>
+        <div class="contact-details" id="contactDetails"></div>
+        <div class="social-links" id="socialLinks"></div>
+      </div>
+      <form class="contact-form reveal stagger-2" id="contactForm">
+        <div class="form-group">
+          <input id="contactName" type="text" placeholder=" " required>
+          <label for="contactName">你的名字</label>
+        </div>
+        <div class="form-group">
+          <input id="contactEmailField" type="email" placeholder=" " required>
+          <label for="contactEmailField">你的邮箱</label>
+        </div>
+        <div class="form-group">
+          <input id="contactProjectType" type="text" placeholder=" ">
+          <label for="contactProjectType">你最近关注什么</label>
+        </div>
+        <div class="form-group">
+          <textarea id="contactMessage" placeholder=" " required></textarea>
+          <label for="contactMessage">想聊些什么</label>
+        </div>
+        <button type="submit" class="submit-btn" id="contactSubmitText">发送留言</button>
+        <div class="contact-form-status" id="contactFormStatus" aria-live="polite"></div>
+      </form>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-logo" id="footerLogo">陈惟</div>
+      <div class="footer-text" id="footerText"></div>
+      <div class="footer-links">
+        <a href="#" id="footerPrivacy">隐私说明</a>
+        <a href="#" id="footerTerms">使用条款</a>
+        <a href="#" id="footerRss">内容订阅</a>
+        <a href="/admin">内容管理</a>
+      </div>
+    </div>
+  </footer>
+
+  <button class="back-to-top" id="backToTop" aria-label="回到顶部">↑</button>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modalContent">
+      <button class="modal-close" id="modalClose" type="button" aria-label="关闭弹窗">×</button>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+  <script src="/assets/site.js"></script>
+</body>
+</html>

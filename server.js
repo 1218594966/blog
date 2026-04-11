@@ -1,0 +1,545 @@
+const express = require("express");
+const fs = require("fs");
+const path = require("path");
+const { createHmac, randomUUID, timingSafeEqual } = require("crypto");
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const CONTENT_PATH = path.join(__dirname, "content", "site-content.json");
+const MESSAGES_PATH = path.join(__dirname, "content", "messages.json");
+const AI_CONFIG_PATH = path.join(__dirname, "content", "ai-config.json");
+const PUBLIC_DIR = path.join(__dirname, "public");
+const ADMIN_LOGIN_PATH = path.join(PUBLIC_DIR, "admin-login.html");
+const DEFAULT_ADMIN_USERNAME = "1218594966";
+const DEFAULT_ADMIN_PASSWORD = "3919799439";
+const DEFAULT_SESSION_SECRET = "change-this-session-secret";
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
+const SESSION_SECRET = process.env.SESSION_SECRET || DEFAULT_SESSION_SECRET;
+const SESSION_COOKIE_NAME = "personblog_admin";
+const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+
+app.use(express.json({ limit: "2mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+function safeEqualStrings(a, b) {
+  const left = Buffer.from(String(a));
+  const right = Buffer.from(String(b));
+  if (left.length !== right.length) return false;
+  return timingSafeEqual(left, right);
+}
+
+function parseCookies(cookieHeader = "") {
+  return cookieHeader
+    .split(";")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .reduce((accumulator, item) => {
+      const separatorIndex = item.indexOf("=");
+      if (separatorIndex === -1) return accumulator;
+      const key = item.slice(0, separatorIndex);
+      const value = item.slice(separatorIndex + 1);
+      accumulator[key] = decodeURIComponent(value);
+      return accumulator;
+    }, {});
+}
+
+function signSessionPayload(payload) {
+  return createHmac("sha256", SESSION_SECRET).update(payload).digest("hex");
+}
+
+function createSessionToken() {
+  const payload = `admin:${Date.now()}`;
+  const signature = signSessionPayload(payload);
+  return `${Buffer.from(payload, "utf8").toString("base64url")}.${signature}`;
+}
+
+function verifySessionToken(token) {
+  if (!token || typeof token !== "string") return false;
+
+  const [encodedPayload, signature] = token.split(".");
+  if (!encodedPayload || !signature) return false;
+
+  let payload = "";
+  try {
+    payload = Buffer.from(encodedPayload, "base64url").toString("utf8");
+  } catch {
+    return false;
+  }
+
+  const expectedSignature = signSessionPayload(payload);
+  if (!safeEqualStrings(signature, expectedSignature)) return false;
+
+  const [role, timestampValue] = payload.split(":");
+  const timestamp = Number(timestampValue);
+  if (role !== "admin" || Number.isNaN(timestamp)) return false;
+
+  const sessionAge = Date.now() - timestamp;
+  return sessionAge >= 0 && sessionAge <= SESSION_MAX_AGE_SECONDS * 1000;
+}
+
+function isAuthenticated(req) {
+  const cookies = parseCookies(req.headers.cookie || "");
+  return verifySessionToken(cookies[SESSION_COOKIE_NAME]);
+}
+
+function setAdminSession(res) {
+  const token = createSessionToken();
+  res.setHeader(
+    "Set-Cookie",
+    `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}; Max-Age=${SESSION_MAX_AGE_SECONDS}; Path=/; HttpOnly; SameSite=Lax`
+  );
+}
+
+function clearAdminSession(res) {
+  res.setHeader(
+    "Set-Cookie",
+    `${SESSION_COOKIE_NAME}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`
+  );
+}
+
+function requireAdminAuth(req, res, next) {
+  if (isAuthenticated(req)) {
+    return next();
+  }
+
+  if (req.path.startsWith("/api/")) {
+    return res.status(401).json({ error: "请先登录后台" });
+  }
+
+  return res.redirect("/admin-login");
+}
+
+app.use((req, res, next) => {
+  const protectedStaticPaths = new Set([
+    "/admin.html",
+    "/assets/admin.js",
+    "/assets/admin.css"
+  ]);
+
+  if (protectedStaticPaths.has(req.path) && !isAuthenticated(req)) {
+    return res.redirect("/admin-login");
+  }
+
+  return next();
+});
+
+app.use(express.static(PUBLIC_DIR));
+
+function ensureJsonFile(filePath, fallbackValue) {
+  const dirPath = path.dirname(filePath);
+
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath, { recursive: true });
+  }
+
+  if (!fs.existsSync(filePath)) {
+    fs.writeFileSync(filePath, `${JSON.stringify(fallbackValue, null, 2)}\n`, "utf8");
+  }
+}
+
+function readJson(filePath, fallbackValue) {
+  ensureJsonFile(filePath, fallbackValue);
+  const raw = fs.readFileSync(filePath, "utf8").trim();
+
+  if (!raw) {
+    return fallbackValue;
+  }
+
+  return JSON.parse(raw);
+}
+
+function writeJson(filePath, data) {
+  ensureJsonFile(filePath, data);
+  fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+}
+
+function validateContentShape(data) {
+  const requiredKeys = [
+    "site",
+    "navigation",
+    "hero",
+    "stats",
+    "about",
+    "projects",
+    "experience",
+    "blog",
+    "testimonials",
+    "contact",
+    "footer"
+  ];
+
+  return requiredKeys.every((key) => Object.prototype.hasOwnProperty.call(data, key));
+}
+
+function normalizeMessagePayload(body) {
+  return {
+    name: typeof body.name === "string" ? body.name.trim() : "",
+    email: typeof body.email === "string" ? body.email.trim() : "",
+    projectType: typeof body.projectType === "string" ? body.projectType.trim() : "",
+    message: typeof body.message === "string" ? body.message.trim() : ""
+  };
+}
+
+function defaultAiConfig() {
+  return {
+    enabled: true,
+    sectionTitle: "AI 对话",
+    sectionDescription: "这里可以接入 OpenAI 兼容模型。配置好接口地址后，网站会自动读取模型列表并支持直接对话。",
+    baseUrl: "",
+    apiKey: "",
+    model: "",
+    systemPrompt: "你是一位友好、清晰、务实的中文 AI 助手。",
+    placeholder: "想问点什么？比如：帮我总结一下最近值得关注的 AI 工具趋势。",
+    temperature: 0.7,
+    maxTokens: 800
+  };
+}
+
+function normalizeAiBaseUrl(value) {
+  const raw = typeof value === "string" ? value.trim() : "";
+  if (!raw) return "";
+
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new Error("模型接口地址不是有效的 URL");
+  }
+
+  let pathname = url.pathname.replace(/\/+$/, "");
+
+  if (!pathname || pathname === "") {
+    pathname = "/v1";
+  }
+
+  if (pathname.endsWith("/chat/completions")) {
+    pathname = pathname.slice(0, -"/chat/completions".length);
+  } else if (pathname.endsWith("/models")) {
+    pathname = pathname.slice(0, -"/models".length);
+  }
+
+  if (!pathname || pathname === "") {
+    pathname = "/v1";
+  }
+
+  url.pathname = pathname;
+  url.search = "";
+  url.hash = "";
+  return url.toString().replace(/\/+$/, "");
+}
+
+function buildAiHeaders(apiKey) {
+  const headers = {
+    "Content-Type": "application/json"
+  };
+
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
+
+  return headers;
+}
+
+function sanitizeAiConfigForClient(config) {
+  return {
+    enabled: Boolean(config.enabled),
+    sectionTitle: config.sectionTitle || defaultAiConfig().sectionTitle,
+    sectionDescription: config.sectionDescription || defaultAiConfig().sectionDescription,
+    model: config.model || "",
+    placeholder: config.placeholder || defaultAiConfig().placeholder
+  };
+}
+
+async function fetchAiModels(baseUrl, apiKey) {
+  const normalizedBaseUrl = normalizeAiBaseUrl(baseUrl);
+  const response = await fetch(`${normalizedBaseUrl}/models`, {
+    method: "GET",
+    headers: buildAiHeaders(apiKey)
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.error?.message || result.error || "获取模型列表失败");
+  }
+
+  const models = Array.isArray(result.data)
+    ? result.data
+      .map((item) => item?.id)
+      .filter((item) => typeof item === "string" && item.trim())
+    : [];
+
+  return {
+    baseUrl: normalizedBaseUrl,
+    models
+  };
+}
+
+function buildAiMessages(systemPrompt, messages) {
+  const normalizedMessages = Array.isArray(messages)
+    ? messages
+      .filter((item) => item && typeof item.role === "string" && typeof item.content === "string")
+      .map((item) => ({
+        role: item.role,
+        content: item.content.trim()
+      }))
+      .filter((item) => item.content)
+    : [];
+
+  if (systemPrompt) {
+    return [
+      { role: "system", content: systemPrompt },
+      ...normalizedMessages
+    ];
+  }
+
+  return normalizedMessages;
+}
+
+function extractAssistantText(payload) {
+  const content = payload?.choices?.[0]?.message?.content;
+
+  if (typeof content === "string") {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    return content
+      .map((item) => (typeof item?.text === "string" ? item.text : ""))
+      .join("")
+      .trim();
+  }
+
+  return "";
+}
+
+app.get("/api/health", (_req, res) => {
+  res.json({ ok: true, time: new Date().toISOString() });
+});
+
+app.get("/api/content", (_req, res) => {
+  try {
+    res.json(readJson(CONTENT_PATH, {}));
+  } catch (error) {
+    res.status(500).json({ error: "读取内容失败", detail: error.message });
+  }
+});
+
+app.get("/api/ai/config", requireAdminAuth, (_req, res) => {
+  try {
+    return res.json(readJson(AI_CONFIG_PATH, defaultAiConfig()));
+  } catch (error) {
+    return res.status(500).json({ error: "读取 AI 配置失败", detail: error.message });
+  }
+});
+
+app.get("/api/ai/public-config", (_req, res) => {
+  try {
+    const config = readJson(AI_CONFIG_PATH, defaultAiConfig());
+    return res.json(sanitizeAiConfigForClient(config));
+  } catch (error) {
+    return res.status(500).json({ error: "读取 AI 配置失败", detail: error.message });
+  }
+});
+
+app.put("/api/ai/config", requireAdminAuth, (req, res) => {
+  try {
+    const incoming = req.body;
+    const nextConfig = {
+      ...defaultAiConfig(),
+      ...incoming,
+      baseUrl: incoming.baseUrl ? normalizeAiBaseUrl(incoming.baseUrl) : "",
+      apiKey: typeof incoming.apiKey === "string" ? incoming.apiKey.trim() : "",
+      model: typeof incoming.model === "string" ? incoming.model.trim() : "",
+      systemPrompt: typeof incoming.systemPrompt === "string" ? incoming.systemPrompt.trim() : defaultAiConfig().systemPrompt,
+      placeholder: typeof incoming.placeholder === "string" ? incoming.placeholder.trim() : defaultAiConfig().placeholder,
+      sectionTitle: typeof incoming.sectionTitle === "string" ? incoming.sectionTitle.trim() : defaultAiConfig().sectionTitle,
+      sectionDescription: typeof incoming.sectionDescription === "string" ? incoming.sectionDescription.trim() : defaultAiConfig().sectionDescription,
+      temperature: Number.isFinite(Number(incoming.temperature)) ? Number(incoming.temperature) : defaultAiConfig().temperature,
+      maxTokens: Number.isFinite(Number(incoming.maxTokens)) ? Number(incoming.maxTokens) : defaultAiConfig().maxTokens,
+      enabled: Boolean(incoming.enabled)
+    };
+
+    writeJson(AI_CONFIG_PATH, nextConfig);
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ error: "保存 AI 配置失败", detail: error.message });
+  }
+});
+
+app.post("/api/ai/models/test", requireAdminAuth, async (req, res) => {
+  try {
+    const baseUrl = typeof req.body.baseUrl === "string" ? req.body.baseUrl : "";
+    const apiKey = typeof req.body.apiKey === "string" ? req.body.apiKey.trim() : "";
+    const result = await fetchAiModels(baseUrl, apiKey);
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "获取模型列表失败" });
+  }
+});
+
+app.get("/api/ai/models", async (_req, res) => {
+  try {
+    const config = readJson(AI_CONFIG_PATH, defaultAiConfig());
+    if (!config.enabled) {
+      return res.status(400).json({ error: "AI 对话区当前未启用" });
+    }
+
+    if (!config.baseUrl || !config.apiKey) {
+      return res.status(400).json({ error: "AI 接口尚未配置完整" });
+    }
+
+    const result = await fetchAiModels(config.baseUrl, config.apiKey);
+    return res.json({
+      ...result,
+      selectedModel: config.model || ""
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "获取模型列表失败" });
+  }
+});
+
+app.put("/api/content", requireAdminAuth, (req, res) => {
+  try {
+    const nextContent = req.body;
+
+    if (!nextContent || typeof nextContent !== "object" || Array.isArray(nextContent)) {
+      return res.status(400).json({ error: "提交内容格式不正确" });
+    }
+
+    if (!validateContentShape(nextContent)) {
+      return res.status(400).json({ error: "站点内容缺少必要字段，保存已取消" });
+    }
+
+    writeJson(CONTENT_PATH, nextContent);
+    return res.json({ ok: true });
+  } catch (error) {
+    return res.status(500).json({ error: "保存内容失败", detail: error.message });
+  }
+});
+
+app.get("/api/messages", requireAdminAuth, (_req, res) => {
+  try {
+    const messages = readJson(MESSAGES_PATH, []);
+    return res.json([...messages].reverse());
+  } catch (error) {
+    return res.status(500).json({ error: "读取留言失败", detail: error.message });
+  }
+});
+
+app.post("/api/contact", (req, res) => {
+  try {
+    const payload = normalizeMessagePayload(req.body);
+
+    if (!payload.name || !payload.email || !payload.message) {
+      return res.status(400).json({ error: "请完整填写姓名、邮箱和留言内容" });
+    }
+
+    const messages = readJson(MESSAGES_PATH, []);
+    messages.push({
+      id: randomUUID(),
+      ...payload,
+      createdAt: new Date().toISOString()
+    });
+    writeJson(MESSAGES_PATH, messages);
+
+    return res.json({ ok: true, message: "留言已收到，我会尽快联系你。" });
+  } catch (error) {
+    return res.status(500).json({ error: "留言提交失败", detail: error.message });
+  }
+});
+
+app.post("/api/ai/chat", async (req, res) => {
+  try {
+    const config = readJson(AI_CONFIG_PATH, defaultAiConfig());
+    const requestedModel = typeof req.body.model === "string" ? req.body.model.trim() : "";
+    const finalModel = requestedModel || config.model;
+    if (!config.enabled) {
+      return res.status(400).json({ error: "AI 对话区当前未启用" });
+    }
+
+    if (!config.baseUrl || !config.apiKey || !finalModel) {
+      return res.status(400).json({ error: "AI 对话尚未配置完整，请先在后台填写接口地址、密钥和模型。" });
+    }
+
+    const messages = buildAiMessages(config.systemPrompt, req.body.messages);
+    if (!messages.length) {
+      return res.status(400).json({ error: "至少需要一条有效消息" });
+    }
+
+    const response = await fetch(`${normalizeAiBaseUrl(config.baseUrl)}/chat/completions`, {
+      method: "POST",
+      headers: buildAiHeaders(config.apiKey),
+      body: JSON.stringify({
+        model: finalModel,
+        messages,
+        temperature: config.temperature,
+        max_tokens: config.maxTokens
+      })
+    });
+
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return res.status(500).json({
+        error: result.error?.message || result.error || "模型调用失败"
+      });
+    }
+
+    const text = extractAssistantText(result);
+    return res.json({
+      ok: true,
+      text: text || "模型已返回结果，但没有解析到可显示的文本内容。",
+      raw: result
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "模型调用失败" });
+  }
+});
+
+app.get("/admin-login", (req, res) => {
+  if (isAuthenticated(req)) {
+    return res.redirect("/admin");
+  }
+
+  return res.sendFile(ADMIN_LOGIN_PATH);
+});
+
+app.post("/admin-login", (req, res) => {
+  const username = typeof req.body.username === "string" ? req.body.username : "";
+  const password = typeof req.body.password === "string" ? req.body.password : "";
+
+  if (!safeEqualStrings(username, ADMIN_USERNAME) || !safeEqualStrings(password, ADMIN_PASSWORD)) {
+    return res.redirect("/admin-login?error=1");
+  }
+
+  setAdminSession(res);
+  return res.redirect("/admin");
+});
+
+app.post("/admin-logout", requireAdminAuth, (_req, res) => {
+  clearAdminSession(res);
+  return res.redirect("/admin-login");
+});
+
+app.get("/admin", requireAdminAuth, (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
+});
+
+app.get(/^(?!\/api\/).*/, (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
+app.listen(PORT, () => {
+  console.log(`站点已启动: http://localhost:${PORT}`);
+  if (!process.env.ADMIN_USERNAME) {
+    console.log(`后台默认账号为: ${DEFAULT_ADMIN_USERNAME}，部署前可设置 ADMIN_USERNAME`);
+  }
+  if (!process.env.ADMIN_PASSWORD) {
+    console.log(`后台默认密码为: ${DEFAULT_ADMIN_PASSWORD}，部署前请设置 ADMIN_PASSWORD`);
+  }
+  if (!process.env.SESSION_SECRET) {
+    console.log("当前使用默认 SESSION_SECRET，部署前请设置 SESSION_SECRET");
+  }
+});
