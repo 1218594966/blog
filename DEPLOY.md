@@ -1,124 +1,138 @@
 # PersonBlog 部署说明
 
-这是一份适用于 `Ubuntu + Node.js + PM2 + Nginx` 的部署方案。
+这份项目已经整理成适合 `Ubuntu + Node.js + PM2 + Nginx` 的线上版本，域名按 `xuxinyuan.xyz` 预设。
 
-## 1. 上传项目
+## 部署目标
 
-把整个项目上传到服务器，例如：
+- 仓库地址：`https://github.com/1218594966/blog.git`
+- 线上目录：`/var/www/personblog`
+- 站点域名：`xuxinyuan.xyz`
+- 备用域名：`www.xuxinyuan.xyz`
+- 进程管理：`PM2`
+- 反向代理：`Nginx`
 
-```bash
-scp -r ./ root@your-server-ip:/var/www/personblog
-```
+## 一键基础部署
 
-如果你在 Windows PowerShell 中执行：
-
-```powershell
-scp -r "D:\Work\Desktop\研究\AI\PersonBlog\*" root@你的服务器IP:/var/www/personblog/
-```
-
-## 2. 安装运行环境
+服务器建议使用 `Ubuntu 22.04` 或更高版本，使用 `root` 执行：
 
 ```bash
-sudo apt update
-sudo apt install -y nginx
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs
-sudo npm install -g pm2
+apt update
+apt install -y git
+git clone https://github.com/1218594966/blog.git /var/www/personblog
+cd /var/www/personblog
+chmod +x deploy/setup-ubuntu.sh
+./deploy/setup-ubuntu.sh
 ```
 
-## 3. 安装依赖
+这个脚本会完成：
+
+- 安装 Node.js 20、Nginx、Certbot、PM2
+- 从 GitHub 拉取项目
+- 安装依赖
+- 创建 `.env`
+- 启动 `personblog`
+- 执行 `pm2 save`
+- 配置 `pm2 startup`，确保服务器重启后自动恢复
+- 写入 Nginx 配置
+
+## 环境变量
+
+第一次部署后，请编辑：
+
+```bash
+nano /var/www/personblog/.env
+```
+
+推荐至少修改这些值：
+
+```env
+NODE_ENV=production
+PORT=3000
+ADMIN_USERNAME=1218594966
+ADMIN_PASSWORD=3919799439
+SESSION_SECRET=换成一段很长很随机的字符串
+SITE_URL=https://xuxinyuan.xyz
+```
+
+改完后重启应用：
 
 ```bash
 cd /var/www/personblog
-npm install --production
-```
-
-## 4. 设置环境变量
-
-建议先在服务器设置：
-
-```bash
-export ADMIN_USERNAME=1218594966
-export ADMIN_PASSWORD=3919799439
-export SESSION_SECRET=换成你自己的长随机字符串
-```
-
-如果你想长期生效，可以写进 `/etc/profile`、`.bashrc` 或 PM2 的启动环境里。
-
-## 5. 启动项目
-
-```bash
-cd /var/www/personblog
-pm2 start ecosystem.config.cjs
+pm2 restart personblog --update-env
 pm2 save
-pm2 startup
 ```
 
-## 6. 配置 Nginx
+## HTTPS
 
-复制项目里的模板文件：
+域名解析到服务器公网 IP 后，执行：
 
 ```bash
-sudo cp /var/www/personblog/deploy/nginx.personblog.conf /etc/nginx/sites-available/personblog
+certbot --nginx -d xuxinyuan.xyz -d www.xuxinyuan.xyz
 ```
 
-然后把其中的：
+成功后可访问：
 
-- `your-domain.com`
-- `www.your-domain.com`
+- 前台：`https://xuxinyuan.xyz`
+- 后台登录：`https://xuxinyuan.xyz/admin-login`
 
-替换成你的真实域名。
+## 服务器重启后自动恢复
 
-启用站点：
+这套项目已经通过 `PM2 + systemd startup` 处理自动恢复。
 
-```bash
-sudo ln -s /etc/nginx/sites-available/personblog /etc/nginx/sites-enabled/personblog
-sudo nginx -t
-sudo systemctl reload nginx
-```
-
-## 7. 域名解析
-
-去你的域名服务商后台添加：
-
-- `@` 的 `A` 记录指向服务器公网 IP
-- `www` 的 `A` 记录指向服务器公网 IP
-
-## 8. 配置 HTTPS
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d your-domain.com -d www.your-domain.com
-```
-
-## 9. 常用命令
-
-查看日志：
-
-```bash
-pm2 logs personblog
-```
-
-重启应用：
-
-```bash
-pm2 restart personblog
-```
-
-查看状态：
+你可以用下面命令确认：
 
 ```bash
 pm2 status
+systemctl status pm2-root
 ```
 
-## 10. 后台地址
+只要之前执行过：
 
-- 前台首页：`https://你的域名`
-- 后台登录：`https://你的域名/admin-login`
+```bash
+pm2 save
+pm2 startup systemd -u root --hp /root
+```
 
-当前默认后台账号密码：
+服务器重启后，项目会自动拉起，不会因为重启就掉站。
 
-- 账号：`1218594966`
-- 密码：`3919799439`
+## 后续更新
 
-上线后强烈建议改掉。
+以后本地修改并推送到 GitHub 后，服务器只要执行：
+
+```bash
+cd /var/www/personblog
+chmod +x deploy/update-from-github.sh
+./deploy/update-from-github.sh
+```
+
+这个脚本会自动：
+
+- `git pull`
+- 安装新增依赖
+- 重启 PM2
+- 保存当前 PM2 进程列表
+
+## 数据存储说明
+
+线上运行时数据会写入：
+
+```text
+/var/www/personblog/storage
+```
+
+这里包括：
+
+- 站点编辑内容
+- 留言数据
+- AI 私密配置
+
+这些文件已经从 Git 跟踪中分离，所以你在后台改内容后，后续 `git pull` 不会轻易和运行时数据冲突。
+
+## 健康检查
+
+可用下面命令确认应用是否在线：
+
+```bash
+curl http://127.0.0.1:3000/api/health
+curl https://xuxinyuan.xyz/api/health
+```

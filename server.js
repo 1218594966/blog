@@ -3,13 +3,22 @@ const fs = require("fs");
 const path = require("path");
 const { createHmac, randomUUID, timingSafeEqual } = require("crypto");
 
+loadEnvFile();
+
 const app = express();
+app.set("trust proxy", 1);
+
 const PORT = process.env.PORT || 3000;
-const CONTENT_PATH = path.join(__dirname, "content", "site-content.json");
-const MESSAGES_PATH = path.join(__dirname, "content", "messages.json");
-const AI_CONFIG_PATH = path.join(__dirname, "content", "ai-config.json");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const ADMIN_LOGIN_PATH = path.join(PUBLIC_DIR, "admin-login.html");
+const DEFAULT_CONTENT_PATH = path.join(__dirname, "content", "site-content.json");
+const DEFAULT_MESSAGES_PATH = path.join(__dirname, "content", "messages.json");
+const DEFAULT_AI_CONFIG_PATH = path.join(__dirname, "content", "ai-config.json");
+const STORAGE_DIR = path.join(__dirname, "storage");
+const CONTENT_PATH = path.join(STORAGE_DIR, "site-content.json");
+const MESSAGES_PATH = path.join(STORAGE_DIR, "messages.json");
+const AI_CONFIG_PATH = path.join(STORAGE_DIR, "ai-config.json");
+const AI_PRIVATE_CONFIG_PATH = path.join(STORAGE_DIR, "ai-config.private.json");
 const DEFAULT_ADMIN_USERNAME = "1218594966";
 const DEFAULT_ADMIN_PASSWORD = "3919799439";
 const DEFAULT_SESSION_SECRET = "change-this-session-secret";
@@ -21,6 +30,34 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+function loadEnvFile() {
+  const envPath = path.join(__dirname, ".env");
+  if (!fs.existsSync(envPath)) return;
+
+  const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+
+    const separatorIndex = trimmed.indexOf("=");
+    if (separatorIndex === -1) continue;
+
+    const key = trimmed.slice(0, separatorIndex).trim();
+    let value = trimmed.slice(separatorIndex + 1).trim();
+
+    if (
+      (value.startsWith("\"") && value.endsWith("\"")) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    if (key && process.env[key] === undefined) {
+      process.env[key] = value;
+    }
+  }
+}
 
 function safeEqualStrings(a, b) {
   const left = Buffer.from(String(a));
@@ -83,18 +120,47 @@ function isAuthenticated(req) {
   return verifySessionToken(cookies[SESSION_COOKIE_NAME]);
 }
 
-function setAdminSession(res) {
+function isSecureRequest(req) {
+  if (req.secure) return true;
+  return String(req.headers["x-forwarded-proto"] || "").toLowerCase() === "https";
+}
+
+function setAdminSession(req, res) {
   const token = createSessionToken();
+  const cookieParts = [
+    `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}`,
+    `Max-Age=${SESSION_MAX_AGE_SECONDS}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax"
+  ];
+
+  if (isSecureRequest(req)) {
+    cookieParts.push("Secure");
+  }
+
   res.setHeader(
     "Set-Cookie",
-    `${SESSION_COOKIE_NAME}=${encodeURIComponent(token)}; Max-Age=${SESSION_MAX_AGE_SECONDS}; Path=/; HttpOnly; SameSite=Lax`
+    cookieParts.join("; ")
   );
 }
 
-function clearAdminSession(res) {
+function clearAdminSession(req, res) {
+  const cookieParts = [
+    `${SESSION_COOKIE_NAME}=`,
+    "Max-Age=0",
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Lax"
+  ];
+
+  if (isSecureRequest(req)) {
+    cookieParts.push("Secure");
+  }
+
   res.setHeader(
     "Set-Cookie",
-    `${SESSION_COOKIE_NAME}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`
+    cookieParts.join("; ")
   );
 }
 
@@ -126,7 +192,7 @@ app.use((req, res, next) => {
 
 app.use(express.static(PUBLIC_DIR));
 
-function ensureJsonFile(filePath, fallbackValue) {
+function ensureJsonFile(filePath, fallbackValue, seedFilePath) {
   const dirPath = path.dirname(filePath);
 
   if (!fs.existsSync(dirPath)) {
@@ -134,12 +200,17 @@ function ensureJsonFile(filePath, fallbackValue) {
   }
 
   if (!fs.existsSync(filePath)) {
+    if (seedFilePath && fs.existsSync(seedFilePath)) {
+      fs.copyFileSync(seedFilePath, filePath);
+      return;
+    }
+
     fs.writeFileSync(filePath, `${JSON.stringify(fallbackValue, null, 2)}\n`, "utf8");
   }
 }
 
-function readJson(filePath, fallbackValue) {
-  ensureJsonFile(filePath, fallbackValue);
+function readJson(filePath, fallbackValue, seedFilePath) {
+  ensureJsonFile(filePath, fallbackValue, seedFilePath);
   const raw = fs.readFileSync(filePath, "utf8").trim();
 
   if (!raw) {
@@ -152,6 +223,20 @@ function readJson(filePath, fallbackValue) {
 function writeJson(filePath, data) {
   ensureJsonFile(filePath, data);
   fs.writeFileSync(filePath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+}
+
+function defaultPrivateAiConfig() {
+  return {
+    apiKey: ""
+  };
+}
+
+function ensureRuntimeStorage() {
+  readJson(CONTENT_PATH, {}, DEFAULT_CONTENT_PATH);
+  readJson(MESSAGES_PATH, [], DEFAULT_MESSAGES_PATH);
+  readJson(AI_CONFIG_PATH, defaultAiConfig(), DEFAULT_AI_CONFIG_PATH);
+  readJson(AI_PRIVATE_CONFIG_PATH, defaultPrivateAiConfig());
+  migrateLegacyAiApiKey();
 }
 
 function validateContentShape(data) {
@@ -194,6 +279,61 @@ function defaultAiConfig() {
     temperature: 0.7,
     maxTokens: 800
   };
+}
+
+function readAiConfig() {
+  const publicConfig = readJson(AI_CONFIG_PATH, defaultAiConfig(), DEFAULT_AI_CONFIG_PATH);
+  const privateConfig = readJson(AI_PRIVATE_CONFIG_PATH, defaultPrivateAiConfig());
+
+  return {
+    ...defaultAiConfig(),
+    ...publicConfig,
+    apiKey: typeof privateConfig.apiKey === "string" ? privateConfig.apiKey.trim() : ""
+  };
+}
+
+function writeAiConfig(config) {
+  const nextConfig = {
+    ...defaultAiConfig(),
+    ...config,
+    apiKey: typeof config.apiKey === "string" ? config.apiKey.trim() : ""
+  };
+
+  const publicConfig = {
+    enabled: Boolean(nextConfig.enabled),
+    sectionTitle: nextConfig.sectionTitle,
+    sectionDescription: nextConfig.sectionDescription,
+    baseUrl: nextConfig.baseUrl,
+    apiKey: "",
+    model: nextConfig.model,
+    systemPrompt: nextConfig.systemPrompt,
+    placeholder: nextConfig.placeholder,
+    temperature: nextConfig.temperature,
+    maxTokens: nextConfig.maxTokens
+  };
+
+  writeJson(AI_CONFIG_PATH, publicConfig);
+  writeJson(AI_PRIVATE_CONFIG_PATH, { apiKey: nextConfig.apiKey });
+}
+
+function migrateLegacyAiApiKey() {
+  const publicConfig = readJson(AI_CONFIG_PATH, defaultAiConfig(), DEFAULT_AI_CONFIG_PATH);
+  const privateConfig = readJson(AI_PRIVATE_CONFIG_PATH, defaultPrivateAiConfig());
+  const legacyKey = typeof publicConfig.apiKey === "string" ? publicConfig.apiKey.trim() : "";
+
+  if (!legacyKey) {
+    return;
+  }
+
+  if (!privateConfig.apiKey) {
+    writeJson(AI_PRIVATE_CONFIG_PATH, { apiKey: legacyKey });
+  }
+
+  writeJson(AI_CONFIG_PATH, {
+    ...defaultAiConfig(),
+    ...publicConfig,
+    apiKey: ""
+  });
 }
 
 function normalizeAiBaseUrl(value) {
@@ -320,7 +460,7 @@ app.get("/api/health", (_req, res) => {
 
 app.get("/api/content", (_req, res) => {
   try {
-    res.json(readJson(CONTENT_PATH, {}));
+    res.json(readJson(CONTENT_PATH, {}, DEFAULT_CONTENT_PATH));
   } catch (error) {
     res.status(500).json({ error: "读取内容失败", detail: error.message });
   }
@@ -328,7 +468,7 @@ app.get("/api/content", (_req, res) => {
 
 app.get("/api/ai/config", requireAdminAuth, (_req, res) => {
   try {
-    return res.json(readJson(AI_CONFIG_PATH, defaultAiConfig()));
+    return res.json(readAiConfig());
   } catch (error) {
     return res.status(500).json({ error: "读取 AI 配置失败", detail: error.message });
   }
@@ -336,7 +476,7 @@ app.get("/api/ai/config", requireAdminAuth, (_req, res) => {
 
 app.get("/api/ai/public-config", (_req, res) => {
   try {
-    const config = readJson(AI_CONFIG_PATH, defaultAiConfig());
+    const config = readAiConfig();
     return res.json(sanitizeAiConfigForClient(config));
   } catch (error) {
     return res.status(500).json({ error: "读取 AI 配置失败", detail: error.message });
@@ -361,7 +501,7 @@ app.put("/api/ai/config", requireAdminAuth, (req, res) => {
       enabled: Boolean(incoming.enabled)
     };
 
-    writeJson(AI_CONFIG_PATH, nextConfig);
+    writeAiConfig(nextConfig);
     return res.json({ ok: true });
   } catch (error) {
     return res.status(500).json({ error: "保存 AI 配置失败", detail: error.message });
@@ -381,7 +521,7 @@ app.post("/api/ai/models/test", requireAdminAuth, async (req, res) => {
 
 app.get("/api/ai/models", async (_req, res) => {
   try {
-    const config = readJson(AI_CONFIG_PATH, defaultAiConfig());
+    const config = readAiConfig();
     if (!config.enabled) {
       return res.status(400).json({ error: "AI 对话区当前未启用" });
     }
@@ -421,7 +561,7 @@ app.put("/api/content", requireAdminAuth, (req, res) => {
 
 app.get("/api/messages", requireAdminAuth, (_req, res) => {
   try {
-    const messages = readJson(MESSAGES_PATH, []);
+    const messages = readJson(MESSAGES_PATH, [], DEFAULT_MESSAGES_PATH);
     return res.json([...messages].reverse());
   } catch (error) {
     return res.status(500).json({ error: "读取留言失败", detail: error.message });
@@ -436,7 +576,7 @@ app.post("/api/contact", (req, res) => {
       return res.status(400).json({ error: "请完整填写姓名、邮箱和留言内容" });
     }
 
-    const messages = readJson(MESSAGES_PATH, []);
+    const messages = readJson(MESSAGES_PATH, [], DEFAULT_MESSAGES_PATH);
     messages.push({
       id: randomUUID(),
       ...payload,
@@ -452,7 +592,7 @@ app.post("/api/contact", (req, res) => {
 
 app.post("/api/ai/chat", async (req, res) => {
   try {
-    const config = readJson(AI_CONFIG_PATH, defaultAiConfig());
+    const config = readAiConfig();
     const requestedModel = typeof req.body.model === "string" ? req.body.model.trim() : "";
     const finalModel = requestedModel || config.model;
     if (!config.enabled) {
@@ -514,12 +654,12 @@ app.post("/admin-login", (req, res) => {
     return res.redirect("/admin-login?error=1");
   }
 
-  setAdminSession(res);
+  setAdminSession(req, res);
   return res.redirect("/admin");
 });
 
-app.post("/admin-logout", requireAdminAuth, (_req, res) => {
-  clearAdminSession(res);
+app.post("/admin-logout", requireAdminAuth, (req, res) => {
+  clearAdminSession(req, res);
   return res.redirect("/admin-login");
 });
 
@@ -531,15 +671,18 @@ app.get(/^(?!\/api\/).*/, (_req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "index.html"));
 });
 
+ensureRuntimeStorage();
+
 app.listen(PORT, () => {
   console.log(`站点已启动: http://localhost:${PORT}`);
+  console.log(`运行时数据目录: ${STORAGE_DIR}`);
   if (!process.env.ADMIN_USERNAME) {
-    console.log(`后台默认账号为: ${DEFAULT_ADMIN_USERNAME}，部署前可设置 ADMIN_USERNAME`);
+    console.log(`后台默认账号为: ${DEFAULT_ADMIN_USERNAME}，部署前请在 .env 中设置 ADMIN_USERNAME`);
   }
   if (!process.env.ADMIN_PASSWORD) {
-    console.log(`后台默认密码为: ${DEFAULT_ADMIN_PASSWORD}，部署前请设置 ADMIN_PASSWORD`);
+    console.log(`后台默认密码为: ${DEFAULT_ADMIN_PASSWORD}，部署前请在 .env 中设置 ADMIN_PASSWORD`);
   }
   if (!process.env.SESSION_SECRET) {
-    console.log("当前使用默认 SESSION_SECRET，部署前请设置 SESSION_SECRET");
+    console.log("当前使用默认 SESSION_SECRET，部署前请在 .env 中设置 SESSION_SECRET");
   }
 });
