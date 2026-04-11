@@ -19,8 +19,8 @@ const CONTENT_PATH = path.join(STORAGE_DIR, "site-content.json");
 const MESSAGES_PATH = path.join(STORAGE_DIR, "messages.json");
 const AI_CONFIG_PATH = path.join(STORAGE_DIR, "ai-config.json");
 const AI_PRIVATE_CONFIG_PATH = path.join(STORAGE_DIR, "ai-config.private.json");
-const DEFAULT_ADMIN_USERNAME = "1218594966";
-const DEFAULT_ADMIN_PASSWORD = "3919799439";
+const DEFAULT_ADMIN_USERNAME = "admin";
+const DEFAULT_ADMIN_PASSWORD = "change-this-password";
 const DEFAULT_SESSION_SECRET = "change-this-session-secret";
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD;
@@ -191,6 +191,7 @@ app.use((req, res, next) => {
 });
 
 app.get(["/", "/index.html"], (_req, res) => {
+  res.set("Cache-Control", "no-store");
   res.type("html").send(renderIndexHtml());
 });
 
@@ -708,6 +709,7 @@ app.get("/admin", requireAdminAuth, (_req, res) => {
 });
 
 app.get(/^(?!\/api\/).*/, (_req, res) => {
+  res.set("Cache-Control", "no-store");
   res.type("html").send(renderIndexHtml());
 });
 
