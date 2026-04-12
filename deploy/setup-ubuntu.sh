@@ -148,11 +148,7 @@ upsert_env "SITE_URL" "${SITE_URL}" ".env"
 npm install --omit=dev
 npm run check
 
-if pm2 describe "${APP_NAME}" >/dev/null 2>&1; then
-  pm2 restart "${APP_NAME}" --update-env
-else
-  pm2 start ecosystem.config.cjs --name "${APP_NAME}" --update-env
-fi
+pm2 startOrReload ecosystem.config.cjs --update-env
 
 pm2 save
 pm2 startup systemd -u root --hp /root

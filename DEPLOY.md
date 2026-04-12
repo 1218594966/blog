@@ -72,6 +72,7 @@ The one-line setup script handles:
 - enabling PM2 auto-start after reboot
 - creating an Nginx site config
 - enabling GitHub auto-sync with systemd timer
+- reloading the current PM2 ecosystem definition on updates
 - optionally requesting HTTPS via Certbot
 
 After it finishes, the app is already live and configured for auto-restart on reboot.

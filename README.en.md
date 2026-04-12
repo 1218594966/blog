@@ -25,6 +25,40 @@ In practice, it behaves more like a personal digital hub than a one-off static s
 
 ---
 
+## One-Line Start
+
+Local run:
+
+```bash
+git clone <your-repo-url> personblog && cd personblog && node -e "const fs=require('fs');if(!fs.existsSync('.env'))fs.copyFileSync('.env.example','.env')" && npm install && npm run dev
+```
+
+Server deployment:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/1218594966/blog/main/deploy/setup-ubuntu.sh | sudo DOMAIN=your-domain.com WWW_DOMAIN=www.your-domain.com CERTBOT_EMAIL=you@example.com ADMIN_USERNAME=admin ADMIN_PASSWORD=change-this-password SESSION_SECRET=replace-with-a-long-random-string bash
+```
+
+Only replace the values in that single line:
+
+- `your-domain.com`
+- `www.your-domain.com`
+- `you@example.com`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `SESSION_SECRET`
+
+If the server command is used, the deployment will already include:
+
+- PM2 process management
+- auto-restart after server reboot
+- Nginx reverse proxy
+- GitHub auto-sync updates
+- automatic reload of the latest process definition
+- optional HTTPS certificate issuance
+
+---
+
 ## Repository Map
 
 ```text
@@ -171,11 +205,7 @@ flowchart TD
 ## Local Run
 
 ```bash
-git clone <your-repo-url>
-cd personblog
-cp .env.example .env
-npm install
-npm run dev
+git clone <your-repo-url> personblog && cd personblog && node -e "const fs=require('fs');if(!fs.existsSync('.env'))fs.copyFileSync('.env.example','.env')" && npm install && npm run dev
 ```
 
 Default URLs:

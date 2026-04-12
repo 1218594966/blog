@@ -25,6 +25,40 @@
 
 ---
 
+## 一行启动
+
+本地启动：
+
+```bash
+git clone <your-repo-url> personblog && cd personblog && node -e "const fs=require('fs');if(!fs.existsSync('.env'))fs.copyFileSync('.env.example','.env')" && npm install && npm run dev
+```
+
+服务器部署：
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/1218594966/blog/main/deploy/setup-ubuntu.sh | sudo DOMAIN=your-domain.com WWW_DOMAIN=www.your-domain.com CERTBOT_EMAIL=you@example.com ADMIN_USERNAME=admin ADMIN_PASSWORD=change-this-password SESSION_SECRET=replace-with-a-long-random-string bash
+```
+
+只需要改这一行里的几个值：
+
+- `your-domain.com`
+- `www.your-domain.com`
+- `you@example.com`
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+- `SESSION_SECRET`
+
+如果使用这条服务器命令，部署完成后会自动具备：
+
+- PM2 进程守护
+- 服务器重启后自动恢复
+- Nginx 反向代理
+- GitHub 自动同步更新
+- 自动重新加载最新进程定义
+- 可选 HTTPS 证书申请
+
+---
+
 ## 仓库结构
 
 ```text
@@ -174,11 +208,7 @@ flowchart TD
 ## 本地启动
 
 ```bash
-git clone <your-repo-url>
-cd personblog
-cp .env.example .env
-npm install
-npm run dev
+git clone <your-repo-url> personblog && cd personblog && node -e "const fs=require('fs');if(!fs.existsSync('.env'))fs.copyFileSync('.env.example','.env')" && npm install && npm run dev
 ```
 
 默认访问地址：

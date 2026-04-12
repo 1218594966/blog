@@ -29,7 +29,7 @@ echo "Updates detected: ${LOCAL_HEAD} -> ${REMOTE_HEAD}"
 git pull --ff-only origin "${BRANCH}"
 npm install --omit=dev
 npm run check
-pm2 restart "${APP_NAME}" --update-env
+pm2 startOrReload ecosystem.config.cjs --update-env
 pm2 save
 
 echo "Sync completed successfully."
