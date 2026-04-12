@@ -1,83 +1,106 @@
-# AI 工作流
+# AI Workflow
 
-## 为什么要有这套工作流
+## Workflow Goal
 
-因为你后面大概率还是会借助 AI 工具继续开发，所以我们需要一套稳定的上下文方式，而不是每次都从头解释一遍项目。
+Make repository context persistent across AI sessions and across different AI tools.
 
-这套工作流的目标是：
+This workflow is repository-based, not chat-history-based.
 
-1. 每个 AI 一进来就知道先看什么
-2. 每次任务结束后都能留下可追踪的记录
-3. 让 GitHub 仓库本身就能承载上下文，而不是只靠聊天记录
+## Core Files
 
-## 关键文件
-
-- `agent.md`
-  你和 AI 的固定协作说明
 - `AGENTS.md`
-  给支持 AGENTS.md 规范的工具自动读取
-- `memory/project-memory.md`
-  当前项目状态、约定、下一步重点
-- `memory/work-log.md`
-  历史任务记录
-
-## 推荐工作流程
-
-### 开始任务
-
-先让 AI 读取：
-
 - `agent.md`
+- `memory/current-task.md`
 - `memory/project-memory.md`
 - `memory/work-log.md`
 
-如果要快速导出上下文，也可以运行：
+## Workflow Stages
+
+### 1. Start
+
+Command:
+
+```bash
+npm run ai:start -- "task summary"
+```
+
+What it does:
+
+- creates or refreshes `memory/current-task.md`
+- records start time
+- writes current task summary
+- lists the required read order for the agent
+
+### 2. Load Context
+
+Command:
 
 ```bash
 npm run ai:context
 ```
 
-### 完成任务
+What it does:
 
-任务完成后运行：
+- prints the repository context bundle in a stable order
+- includes current task, project memory, work log, architecture, roadmap
+
+### 3. Implement
+
+Expected sequence:
+
+1. inspect relevant code
+2. edit files
+3. run validation
+4. review resulting diff
+
+### 4. Finish
+
+Command:
 
 ```bash
-npm run ai:checkpoint -- "本次完成了什么"
+npm run ai:finish -- "completed summary"
 ```
 
-这个命令会：
+What it does:
 
-- 更新 `memory/project-memory.md` 中的最近一次任务摘要
-- 往 `memory/work-log.md` 追加一条历史记录
+- marks `memory/current-task.md` as completed
+- updates the latest task block in `memory/project-memory.md`
+- appends a timestamped record to `memory/work-log.md`
 
-### 提交代码
+### 5. Publish
+
+Typical sequence:
 
 ```bash
 git add .
-git commit -m "你的修改说明"
+git commit -m "your change"
 git push origin main
 ```
 
-推到 GitHub 后，服务器会自动同步。
+Server behavior:
 
-## 对小白更友好的使用方式
+- server follows GitHub `main`
+- production sync is automatic
+- runtime secrets and edited content remain outside git in `storage/`
 
-以后你甚至可以直接把下面这句话发给 AI：
+## Practical Use With AI Tools
+
+For tools that support `AGENTS.md`, this file acts as the repository bootstrap.
+
+For tools that do not auto-read repository instructions, use this prompt:
 
 ```text
-先读取 agent.md、memory/project-memory.md、memory/work-log.md，再根据上下文继续修改项目。
+Read AGENTS.md, agent.md, memory/current-task.md, memory/project-memory.md, and memory/work-log.md before making changes.
 ```
 
-如果是支持 AGENTS.md 的工具，它可能还会自动读取 `AGENTS.md`。
+## Current Limitation
 
-## 限制说明
+No generic AI tool can be forced by the repository itself to read files automatically on every run.
 
-这套机制可以把上下文组织得很清楚，但不同 AI 工具并不能保证“100% 自动读取”这些文件。
+What this repository can do is:
 
-最稳的做法仍然是：
+- provide a fixed read order
+- provide start/finish commands
+- keep persistent memory in versioned files
 
-1. 把这些文件放在仓库根目录和固定位置
-2. 开头明确告诉 AI 先读它们
-3. 每次任务结束后更新记忆
-
-这样即使换工具，也能很快接上。
+That makes handoff far more stable, even when the AI tool changes.

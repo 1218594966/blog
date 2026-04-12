@@ -3,7 +3,9 @@ import path from "path";
 
 const root = process.cwd();
 const files = [
+  "AGENTS.md",
   "agent.md",
+  "memory/current-task.md",
   "memory/project-memory.md",
   "memory/work-log.md",
   "docs/ARCHITECTURE.md",

@@ -1,60 +1,83 @@
-# 项目 AI 协作说明
+# Agent Operating Context
 
-这个文件是给你和 AI 开发助手共同使用的固定上下文入口。
+## Project Identity
 
-## 项目定位
+- Type: personal site + blog + admin + AI chat + extensible hub
+- Source of truth: GitHub `main`
+- Deployment model: server auto-syncs from GitHub
+- Runtime storage: `storage/`
+- Expansion hubs:
+  - `/tools`
+  - `/projects`
+  - `/lab`
 
-这是一个“个人主页 + Blog + 后台编辑 + AI 对话 + 后续扩展入口”的网站项目。
+## Primary Goal
 
-当前目标不只是把首页做好，而是把它做成你未来所有功能和项目的总入口。
+Do not treat this repository as a one-off homepage.
 
-## 当前已完成
+The long-term goal is to keep the main site as a stable entry hub for:
 
-- 主站、后台、留言、AI 对话区已上线
-- GitHub 已作为代码真源
-- 服务器已能自动跟随 GitHub 更新
-- 已有 `/tools`、`/projects`、`/lab` 三个扩展入口
+- personal content
+- lightweight tools
+- larger projects
+- experiments and prototypes
 
-## 默认协作规则
+## Required Context Inputs
 
-每次开始任务前，AI 应优先读取：
+Always read these before implementing changes:
 
-1. 本文件 `agent.md`
+1. `memory/current-task.md`
 2. `memory/project-memory.md`
 3. `memory/work-log.md`
 
-必要时再看：
+Read these when the task touches structure or planning:
 
 4. `docs/ARCHITECTURE.md`
 5. `docs/ROADMAP.md`
 
-## 代码和发布约定
+## Constraints
 
-- GitHub `main` 是当前真源。
-- 服务器会自动同步 `main`，所以推送前要尽量保证可运行。
-- 运行时数据在 `storage/`，不要把线上私密数据写回仓库。
-- 能做成通用模板的内容，尽量不要写死个人域名或敏感信息。
+- Prefer Chinese content and Chinese UX copy by default.
+- Do not overwrite runtime data in `storage/`.
+- Do not hardcode personal secrets, private keys, or production-only values into tracked files.
+- Prefer incremental structure improvements over large rewrites unless the task explicitly requires it.
 
-## 每次任务结束后
+## Execution Sequence
 
-完成任务后，建议执行：
+### On task start
+
+Run:
 
 ```bash
-npm run ai:checkpoint -- "本次完成了什么"
+npm run ai:start -- "task summary"
 ```
 
-这会做两件事：
+Then:
 
-1. 更新 `memory/project-memory.md` 里的最近一次工作摘要
-2. 追加一条到 `memory/work-log.md`
+1. read required context
+2. inspect relevant code
+3. implement
+4. validate
 
-## 面向未来的扩展思路
+### On task finish
 
-- `/tools`
-  放轻量工具
-- `/projects`
-  放完整项目
-- `/lab`
-  放实验原型
+Run:
 
-主站继续做品牌表达和导航，不要把所有新东西都堆进首页。
+```bash
+npm run ai:finish -- "completed summary"
+```
+
+Effects:
+
+- updates `memory/current-task.md`
+- updates the latest task block in `memory/project-memory.md`
+- appends an entry to `memory/work-log.md`
+
+## Structural Direction
+
+- Homepage: brand, navigation, overview
+- `/tools`: small reusable utilities
+- `/projects`: full standalone applications
+- `/lab`: prototypes, motion experiments, temporary ideas
+
+New features should be assigned to one of these layers before implementation.

@@ -1,27 +1,44 @@
-# AI 协作入口
+# Repository Agent Protocol
 
-如果你是接手这个仓库的 AI 编码助手，请先阅读以下文件，再开始任何修改：
+## Required Read Order
+
+Before making any change, read these files in order:
 
 1. `agent.md`
-2. `memory/project-memory.md`
-3. `memory/work-log.md`
-4. `docs/ARCHITECTURE.md`
-5. `docs/ROADMAP.md`
+2. `memory/current-task.md`
+3. `memory/project-memory.md`
+4. `memory/work-log.md`
+5. `docs/ARCHITECTURE.md`
+6. `docs/ROADMAP.md`
 
-默认工作方式：
+## Operating Rules
 
-- 使用中文沟通。
-- 先理解项目当前结构和最近一次工作记录，再开始修改。
-- 完成任务后，运行：
+- Use Chinese for user-facing communication unless explicitly asked otherwise.
+- Treat GitHub `main` as the source of truth.
+- Keep runtime data out of the repository. Do not write secrets or production data back into git-tracked files.
+- Prefer extending `/tools`, `/projects`, or `/lab` instead of overloading the homepage.
+- Keep structure, naming, and deployment conventions consistent with existing docs.
 
-```bash
-npm run ai:checkpoint -- "本次修改摘要"
-```
+## Start Procedure
 
-如果修改涉及结构、部署或新的约定，请同步更新：
+When a new task begins:
 
-- `memory/project-memory.md`
-- `docs/ARCHITECTURE.md`
-- `docs/ROADMAP.md`
+1. Run:
+   `npm run ai:start -- "task summary"`
+2. Read the required files listed above.
+3. If needed, run:
+   `npm run ai:context`
+4. Inspect the current code before editing.
 
-这个仓库的 GitHub `main` 是当前真源，服务器会自动同步 `main` 的更新。
+## Finish Procedure
+
+Before handing off a completed task:
+
+1. Run validation commands needed for the change.
+2. Run:
+   `npm run ai:finish -- "completed summary"`
+3. If structure, deployment, or workflow changed, update:
+   - `docs/ARCHITECTURE.md`
+   - `docs/ROADMAP.md`
+   - `memory/project-memory.md`
+4. Commit and push only after the repository is in a runnable state.
