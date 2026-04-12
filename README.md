@@ -1,25 +1,24 @@
 # PersonBlog
 
-一个可直接部署的个人主页 + Blog 项目，包含前台展示、后台编辑、留言收集，以及可接入 OpenAI 兼容接口的 AI 对话区。
+一个可直接部署的个人主页 + Blog 项目，适合用来搭建个人网站、AI 兴趣记录站、轻量内容站和后续可扩展的项目入口。
 
-适合用来搭建：
+它目前包含：
 
-- 个人介绍主页
-- AI 兴趣与学习记录
-- 个人博客
-- 项目展示页
-- 带后台的个人站点
+- 主站首页
+- 内容管理后台
+- 留言收集
+- OpenAI 兼容接口接入的 AI 对话区
+- 面向未来扩展的 `/tools`、`/projects`、`/lab` 入口
 
-## 功能特性
+## 功能概览
 
-- 前台个人主页与 Blog 展示
+- 前台个人主页与博客展示
 - 后台登录与内容编辑
-- AI 对话区，支持 OpenAI 兼容接口
-- 联系表单与留言保存
-- PM2 守护进程部署
+- 访客留言提交与后台查看
+- OpenAI 兼容模型配置、自动读取模型列表、前台对话
+- PM2 部署与开机自启
 - Nginx 反向代理
-- 支持服务器重启后自动恢复
-- 支持从 GitHub 拉取更新
+- GitHub 自动同步更新
 
 ## 项目结构
 
@@ -27,13 +26,18 @@
 .
 ├─ content/                   # 仓库内默认内容模板
 ├─ deploy/                    # 部署、更新、自动同步脚本
-├─ public/                    # 前台与后台静态资源
-├─ storage/                   # 运行时数据目录（已加入 .gitignore）
-├─ .env.example               # 环境变量示例
-├─ DEPLOY.md                  # 部署说明
-├─ ecosystem.config.cjs       # PM2 配置
+├─ docs/                      # 公开文档、路线图、架构说明
+├─ public/                    # 前台、后台、扩展入口和静态资源
+│  ├─ assets/
+│  ├─ tools/
+│  ├─ projects/
+│  └─ lab/
+├─ storage/                   # 运行时数据目录，已加入 .gitignore
+├─ .env.example
+├─ DEPLOY.md
+├─ ecosystem.config.cjs
 ├─ package.json
-└─ server.js                  # Express 服务入口
+└─ server.js
 ```
 
 ## 本地开发
@@ -45,18 +49,18 @@ npm run dev
 
 默认访问：
 
-- 前台：`http://localhost:3000`
-- 后台：`http://localhost:3000/admin-login`
+- 前台：[http://localhost:3000](http://localhost:3000)
+- 后台：[http://localhost:3000/admin-login](http://localhost:3000/admin-login)
 
 ## 环境变量
 
-复制并编辑：
+复制配置文件：
 
 ```bash
 cp .env.example .env
 ```
 
-至少建议配置：
+建议至少配置：
 
 ```env
 NODE_ENV=production
@@ -67,9 +71,9 @@ SESSION_SECRET=change-this-to-a-long-random-string
 SITE_URL=https://your-domain.com
 ```
 
-## 数据存储
+## 运行时数据
 
-为了避免线上后台修改的内容被 Git 覆盖，运行时数据不会写回 `content/`，而是写到 `storage/`：
+为了避免线上后台修改的内容被 `git pull` 覆盖，运行时数据不会写回 `content/`，而是写到 `storage/`：
 
 - `storage/site-content.json`
 - `storage/messages.json`
@@ -79,14 +83,14 @@ SITE_URL=https://your-domain.com
 这意味着：
 
 - 可以放心在后台改内容
-- 后续 `git pull` 不会轻易覆盖线上内容
+- 后续代码更新不会轻易覆盖线上内容
 - AI 私密 Key 不会进入 GitHub 仓库
 
 ## 部署
 
-详细步骤见 [DEPLOY.md](./DEPLOY.md)。
+完整部署说明见 [DEPLOY.md](./DEPLOY.md)。
 
-基础流程：
+最基础流程：
 
 ```bash
 git clone <your-repo-url> /var/www/personblog
@@ -100,7 +104,7 @@ pm2 startup
 
 ## 更新方式
 
-本地改完后：
+本地修改后：
 
 ```bash
 git add .
@@ -117,7 +121,7 @@ cd /var/www/personblog
 
 ## 自动同步 GitHub
 
-如果希望服务器自动跟随 GitHub 主分支更新，可以启用仓库内提供的 systemd timer：
+如果希望服务器自动跟随 GitHub `main` 分支更新，可以启用仓库内提供的 systemd timer：
 
 ```bash
 sudo cp deploy/personblog-sync.service /etc/systemd/system/
@@ -141,12 +145,26 @@ systemctl list-timers --all | grep personblog
 - `pm2 restart personblog --update-env`
 - `pm2 save`
 
+## 后续扩展建议
+
+推荐把这个站点当成总入口，而不是把所有新功能都继续堆进首页。
+
+- `/tools`
+  放轻量工具和效率插件
+- `/projects`
+  放完整应用和长期维护项目
+- `/lab`
+  放实验原型和临时尝试
+
+更多规划可以看：
+
+- [项目架构](./docs/ARCHITECTURE.md)
+- [路线图](./docs/ROADMAP.md)
+
 ## 开源建议
 
-如果要作为公开仓库长期维护，建议补充：
+这个仓库已经适合公开维护。建议在 GitHub 页面补充：
 
 - 仓库描述
-- Topics，例如：`blog`、`personal-site`、`nodejs`、`express`、`ai`
-- 合适的 `LICENSE`
-
-如果你希望别人也能直接复用，可以进一步把站点文案、域名、证书路径等内容改成更通用的模板。
+- Topics，例如 `personal-site`、`blog`、`nodejs`、`express`、`ai`
+- 截图或演示图

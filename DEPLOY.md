@@ -1,6 +1,6 @@
 # 部署说明
 
-这份项目适合使用 `Ubuntu + Node.js + PM2 + Nginx` 部署。
+这个项目适合使用 `Ubuntu + Node.js + PM2 + Nginx` 部署。
 
 ## 一次性部署
 
@@ -44,7 +44,7 @@ pm2 save
 
 ## Nginx
 
-可以从仓库模板复制一份配置，再按自己的域名、证书路径修改：
+可以先从仓库模板复制一份配置，再按自己的域名和证书路径修改：
 
 ```bash
 sudo cp /var/www/personblog/deploy/nginx.personblog.conf /etc/nginx/sites-available/personblog
@@ -75,7 +75,7 @@ cd /var/www/personblog
 
 ## 自动同步 GitHub
 
-仓库内提供了自动同步脚本与 systemd timer：
+仓库提供了自动同步脚本和 systemd timer：
 
 - `deploy/sync-from-github.sh`
 - `deploy/personblog-sync.service`
@@ -106,4 +106,4 @@ sudo systemctl enable --now personblog-sync.timer
 - 留言数据
 - AI 私密配置
 
-这些内容不受 `git pull` 影响，所以后续更新代码时，不需要每次重新配置 AI Key。
+这些内容不会被 `git pull` 覆盖，所以后续更新代码时，不需要每次重新配置 AI Key。

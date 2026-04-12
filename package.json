@@ -12,13 +12,14 @@
     "pm2:save": "pm2 save"
   },
   "keywords": [
-    "portfolio",
+    "personal-site",
     "blog",
     "cms",
-    "express"
+    "express",
+    "ai"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "commonjs",
   "dependencies": {
     "express": "^5.2.1"

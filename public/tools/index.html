@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>工具中心</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/hub.css">
+</head>
+<body>
+  <main class="hub-shell">
+    <div class="hub-topbar">
+      <a class="hub-back" href="/">返回主站</a>
+      <nav class="hub-nav">
+        <a class="active" href="/tools">工具中心</a>
+        <a href="/projects">项目中心</a>
+        <a href="/lab">实验区</a>
+      </nav>
+    </div>
+
+    <section class="hub-hero">
+      <div class="hub-kicker">TOOLS HUB</div>
+      <h1 class="hub-title">工具中心</h1>
+      <p class="hub-desc">这里会逐步放入轻量工具、日常效率插件和一些实用实验。后续建设时，所有小功能都可以从这里进入，再按分类扩展成独立页面。</p>
+    </section>
+
+    <section class="hub-grid">
+      <article class="hub-card">
+        <div class="hub-badge">01</div>
+        <h2>推荐结构</h2>
+        <ul>
+          <li><code>/tools/prompt-lab</code>：提示词实验</li>
+          <li><code>/tools/text-polish</code>：文本润色</li>
+          <li><code>/tools/weekly-digest</code>：周报整理</li>
+        </ul>
+      </article>
+
+      <article class="hub-card">
+        <div class="hub-badge">02</div>
+        <h2>适合先做的功能</h2>
+        <ul>
+          <li>提示词模板库</li>
+          <li>文章摘要工具</li>
+          <li>灵感收集卡片</li>
+          <li>常用 AI 链接导航</li>
+        </ul>
+      </article>
+
+      <article class="hub-card">
+        <div class="hub-badge">03</div>
+        <h2>当前状态</h2>
+        <p>这一页已经为后续独立工具做了入口保留。等你新增第一个工具时，只需要在 <code>public/tools/工具名</code> 下增加页面即可。</p>
+        <div class="hub-actions">
+          <a class="hub-button" href="/projects">去看项目中心</a>
+          <a class="hub-button secondary" href="/lab">进入实验区</a>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

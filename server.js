@@ -235,6 +235,21 @@ app.get(["/", "/index.html"], (_req, res) => {
   res.type("html").send(renderIndexHtml());
 });
 
+app.get("/tools", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.sendFile(path.join(PUBLIC_DIR, "tools", "index.html"));
+});
+
+app.get("/projects", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.sendFile(path.join(PUBLIC_DIR, "projects", "index.html"));
+});
+
+app.get("/lab", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.sendFile(path.join(PUBLIC_DIR, "lab", "index.html"));
+});
+
 app.use(express.static(PUBLIC_DIR));
 
 function ensureJsonFile(filePath, fallbackValue, seedFilePath) {
@@ -783,9 +798,12 @@ app.get("/admin", requireAdminAuth, (_req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "admin.html"));
 });
 
-app.get(/^(?!\/api\/).*/, (_req, res) => {
-  res.set("Cache-Control", "no-store");
-  res.type("html").send(renderIndexHtml());
+app.get(/^(?!\/api\/).*/, (req, res) => {
+  if (req.path.endsWith(".html")) {
+    return res.status(404).sendFile(path.join(PUBLIC_DIR, "404.html"));
+  }
+
+  res.status(404).sendFile(path.join(PUBLIC_DIR, "404.html"));
 });
 
 ensureRuntimeStorage();
