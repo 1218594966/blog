@@ -9,7 +9,9 @@
     "check": "node --check server.js && node --check public/assets/site.js && node --check public/assets/admin.js",
     "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:restart": "pm2 restart ecosystem.config.cjs",
-    "pm2:save": "pm2 save"
+    "pm2:save": "pm2 save",
+    "ai:context": "node scripts/show-context.mjs",
+    "ai:checkpoint": "node scripts/checkpoint-memory.mjs"
   },
   "keywords": [
     "personal-site",

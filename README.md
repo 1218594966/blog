@@ -1,14 +1,20 @@
 # PersonBlog
 
-一个可直接部署的个人主页 + Blog 项目，适合用来搭建个人网站、AI 兴趣记录站、轻量内容站和后续可扩展的项目入口。
+一个可直接部署的个人主页 + Blog 项目，适合搭建：
 
-它目前包含：
+- 个人介绍主页
+- AI 兴趣记录站
+- 轻量博客
+- 可扩展的工具 / 项目入口站
+
+它目前已经包含：
 
 - 主站首页
 - 内容管理后台
 - 留言收集
 - OpenAI 兼容接口接入的 AI 对话区
 - 面向未来扩展的 `/tools`、`/projects`、`/lab` 入口
+- 面向 AI 协作的工作流与项目记忆系统
 
 ## 功能概览
 
@@ -19,6 +25,7 @@
 - PM2 部署与开机自启
 - Nginx 反向代理
 - GitHub 自动同步更新
+- AI 协作工作流、项目记忆、历史记录
 
 ## 项目结构
 
@@ -26,13 +33,17 @@
 .
 ├─ content/                   # 仓库内默认内容模板
 ├─ deploy/                    # 部署、更新、自动同步脚本
-├─ docs/                      # 公开文档、路线图、架构说明
+├─ docs/                      # 公开文档、路线图、架构说明、AI 工作流
+├─ memory/                    # 项目记忆与工作记录
 ├─ public/                    # 前台、后台、扩展入口和静态资源
 │  ├─ assets/
 │  ├─ tools/
 │  ├─ projects/
 │  └─ lab/
+├─ scripts/                   # AI 工作流辅助脚本
 ├─ storage/                   # 运行时数据目录，已加入 .gitignore
+├─ AGENTS.md                  # 给支持 AGENTS.md 的 AI 工具读取的入口文件
+├─ agent.md                   # 你自己也能直接看的 AI 协作说明
 ├─ .env.example
 ├─ DEPLOY.md
 ├─ ecosystem.config.cjs
@@ -145,6 +156,32 @@ systemctl list-timers --all | grep personblog
 - `pm2 restart personblog --update-env`
 - `pm2 save`
 
+## AI 工作流
+
+这个项目已经内置了一套给 AI 开发助手使用的工作流。
+
+核心文件：
+
+- [agent.md](./agent.md)
+- [AGENTS.md](./AGENTS.md)
+- [项目记忆](./memory/project-memory.md)
+- [工作记录](./memory/work-log.md)
+- [AI 工作流说明](./docs/AI_WORKFLOW.md)
+
+常用命令：
+
+```bash
+npm run ai:context
+npm run ai:checkpoint -- "这次做了什么"
+```
+
+用途：
+
+- `ai:context`
+  快速输出当前项目上下文，方便交给 AI。
+- `ai:checkpoint`
+  任务结束后更新最近一次工作摘要，并追加到历史记录。
+
 ## 后续扩展建议
 
 推荐把这个站点当成总入口，而不是把所有新功能都继续堆进首页。
@@ -160,11 +197,4 @@ systemctl list-timers --all | grep personblog
 
 - [项目架构](./docs/ARCHITECTURE.md)
 - [路线图](./docs/ROADMAP.md)
-
-## 开源建议
-
-这个仓库已经适合公开维护。建议在 GitHub 页面补充：
-
-- 仓库描述
-- Topics，例如 `personal-site`、`blog`、`nodejs`、`express`、`ai`
-- 截图或演示图
+- [AI 工作流](./docs/AI_WORKFLOW.md)
