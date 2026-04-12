@@ -2,7 +2,7 @@
 
 <div align="center">
 
-### A personal site hub for identity, writing, experiments, tools, and future projects
+### 一个把个人主页、博客、AI 工作流与未来扩展入口收在同一个仓库里的站点骨架
 
 [中文](./README.zh-CN.md) | [English](./README.en.md)
 
@@ -10,171 +10,109 @@
 
 ---
 
-## Quick Answer
+## 项目定位
 
-### 本地开发要不要手动执行 `deploy/` 里的文件？
+这个仓库不是单一页面模板，而是一个持续生长的个人站点底座。
 
-不用。
+它同时承担四件事：
 
-`deploy/` 只给服务器部署和自动同步使用。  
-如果只是把仓库拉到本地运行网站，通常只需要：
+- 个人主页与博客
+- 未来工具页、实验页、独立项目的统一入口
+- 可编辑内容的轻量后台
+- 面向 AI 协作开发的固定工作流
 
-```bash
-git clone <your-repo-url>
-cd personblog
-cp .env.example .env
-npm install
-npm run dev
-```
-
-默认访问：
-
-- 前台：`http://localhost:3000`
-- 后台：`http://localhost:3000/admin-login`
-
-### 什么时候才需要看 `deploy/`？
-
-只有下面这些场景才需要：
-
-- 把项目部署到服务器
-- 配置 Nginx
-- 配置 PM2
-- 开启服务器自动同步 GitHub
+换句话说，它更像一个“个人数字中枢”，而不是一次性做完就不再扩展的静态网页。
 
 ---
 
-## Repository Layout
+## 仓库结构
 
 ```text
 personblog/
-├─ site/         当前主站
-├─ extensions/   后续工具 / 项目 / 实验
-├─ deploy/       服务器部署与同步
-├─ workflow/     AI 协作工作流
-└─ storage/      运行时数据（线上生成，不进 Git）
+├─ site/          主站代码
+├─ extensions/    后续扩展入口
+├─ workflow/      AI 协作工作流
+├─ deploy/        服务器自动化文件
+├─ storage/       运行时数据（生产环境生成，不进 Git）
+├─ README.md
+├─ README.zh-CN.md
+├─ README.en.md
+├─ AGENTS.md
+├─ package.json
+└─ ecosystem.config.cjs
 ```
 
----
-
-## Structure Graph
+## 结构图
 
 ```mermaid
-flowchart TB
-    A["PersonBlog Repository"] --> B["site/"]
-    A --> C["extensions/"]
-    A --> D["deploy/"]
-    A --> E["workflow/"]
+flowchart TD
+    R["PersonBlog Repository"] --> S["site/"]
+    R --> E["extensions/"]
+    R --> W["workflow/"]
+    R --> D["deploy/"]
+    R --> T["storage/"]
 
-    B --> B1["server.js<br/>网站服务端入口"]
-    B --> B2["public/<br/>前台 / 后台 / 样式 / 脚本"]
-    B --> B3["content/<br/>默认内容模板"]
+    S --> S1["server.js<br/>服务端入口"]
+    S --> S2["public/<br/>前台、后台、样式、脚本"]
+    S --> S3["content/<br/>默认内容模板"]
 
-    C --> C1["tools/<br/>轻量工具"]
-    C --> C2["projects/<br/>完整项目"]
-    C --> C3["lab/<br/>实验原型"]
+    E --> E1["tools/<br/>轻量工具"]
+    E --> E2["projects/<br/>完整项目"]
+    E --> E3["lab/<br/>实验原型"]
 
-    D --> D1["Nginx 配置"]
-    D --> D2["PM2 / systemd"]
-    D --> D3["GitHub 自动同步"]
+    W --> W1["agent.md<br/>AI 执行准则"]
+    W --> W2["memory/<br/>项目记忆与历史"]
+    W --> W3["scripts/<br/>开始/输出/完成任务"]
+    W --> W4["docs/<br/>架构与路线图"]
 
-    E --> E1["agent.md"]
-    E --> E2["memory/"]
-    E --> E3["scripts/"]
-    E --> E4["docs/"]
+    D --> D1["setup-ubuntu.sh<br/>一键部署"]
+    D --> D2["sync/update scripts<br/>同步与更新"]
+    D --> D3["service/timer/nginx<br/>服务器模板"]
+
+    T --> T1["site-content.json"]
+    T --> T2["messages.json"]
+    T --> T3["ai-config*.json"]
 ```
 
 ---
 
-## What Each Main Folder Does
+## 目录职责
 
-### `site/`
-
-当前网站本体都在这里。
-
-- `site/server.js`
-  网站服务端入口。负责启动 Express、提供接口、处理后台登录、读取内容、返回页面。
-- `site/public/`
-  网页层。包括前台页面、后台页面、CSS、前端 JS、静态资源。
-- `site/content/`
-  默认内容模板。相当于“项目自带的初始站点内容”。
-
-### `extensions/`
-
-以后新增功能的统一入口。
-
-- `extensions/tools/`
-  放轻量工具，比如提示词库、文本工具、小页面。
-- `extensions/projects/`
-  放更完整、独立的项目。
-- `extensions/lab/`
-  放实验页、原型、临时想法。
-
-### `deploy/`
-
-只给服务器使用，不是本地开发必看目录。
-
-里面放：
-
-- Nginx 配置模板
-- 服务器更新脚本
-- GitHub 自动同步脚本
-- systemd service / timer
-
-### `workflow/`
-
-给 AI 协作开发使用的固定工作流。
-
-里面放：
-
-- `workflow/agent.md`
-  AI 要遵守的项目上下文规则。
-- `workflow/memory/`
-  当前任务、项目记忆、历史工作日志。
-- `workflow/scripts/`
-  开始任务、输出上下文、结束任务的命令脚本。
-- `workflow/docs/`
-  AI 工作流、架构说明、路线图。
+| 路径 | 作用 |
+| --- | --- |
+| `site/server.js` | 网站服务端入口。负责启动 Express、处理接口、后台登录、内容读写、AI 对话转发。 |
+| `site/public/` | 网页前端层。首页、后台页、样式、前端脚本、404 页面都在这里。 |
+| `site/content/` | 默认内容模板。新部署时会作为初始站点内容来源。 |
+| `extensions/tools/` | 以后放轻量工具，比如提示词工具、文本处理器、收藏索引。 |
+| `extensions/projects/` | 以后放完整项目入口或独立项目页。 |
+| `extensions/lab/` | 以后放实验页、草稿页、原型页。 |
+| `workflow/` | 面向 AI 协作的固定上下文、历史记忆、脚本与文档。 |
+| `deploy/` | 服务器自动化文件夹，用于一键部署、GitHub 自动同步、Nginx/PM2/systemd 配置。 |
+| `storage/` | 运行时数据目录。线上后台改动、留言、AI 私密配置都保存在这里，不跟 Git 走。 |
 
 ---
 
-## Local Development
+## 主站实现方式
 
-```bash
-git clone <your-repo-url>
-cd personblog
-cp .env.example .env
-npm install
-npm run dev
-```
+主站部分是“轻后端 + 静态前端页面”的结构：
 
-如果只是本地看效果，到这里就够了。  
-**不需要执行 `deploy/` 里的脚本。**
+- Node.js + Express 负责服务端与接口
+- `site/public/` 直接提供页面与静态资源
+- `site/content/` 提供默认内容种子
+- `storage/` 保存运行时内容，保证 `git pull` 不覆盖线上数据
+
+这让项目同时具备两种特性：
+
+- 对小白友好：目录不深，容易看懂
+- 对后续扩展友好：可以持续往 `extensions/` 增加新模块
 
 ---
 
-## AI Workflow
+## AI 工作流
 
-这套流程不是给普通访客看的，而是给后续接手项目的 AI 工具看的。
+这个仓库内置了一套固定的 AI 协作流程，目的不是“记录聊天”，而是把任务上下文沉淀成文件，让后续任何 AI 都能快速接手。
 
-### Start
-
-```bash
-npm run ai:start -- "任务摘要"
-```
-
-### Load Context
-
-```bash
-npm run ai:context
-```
-
-### Finish
-
-```bash
-npm run ai:finish -- "完成摘要"
-```
-
-### Read Order
+### 读取顺序
 
 1. `AGENTS.md`
 2. `workflow/agent.md`
@@ -184,64 +122,86 @@ npm run ai:finish -- "完成摘要"
 6. `workflow/docs/ARCHITECTURE.md`
 7. `workflow/docs/ROADMAP.md`
 
----
+### 常用命令
 
-## Workflow Graph
+```bash
+npm run ai:start -- "任务摘要"
+npm run ai:context
+npm run ai:finish -- "完成摘要"
+```
+
+### 流程图
 
 ```mermaid
-flowchart TB
-    subgraph L["Local Setup"]
-        L1["git clone"]
-        L2["cd personblog"]
-        L3["cp .env.example .env"]
-        L4["npm install"]
-        L5["npm run dev"]
+flowchart TD
+    subgraph A["01 上下文装载"]
+        A1["读取 AGENTS.md"]
+        A2["读取 workflow/agent.md"]
+        A3["读取 memory/current-task.md"]
+        A4["读取 project-memory.md 与 work-log.md"]
+        A5["读取 ARCHITECTURE.md 与 ROADMAP.md"]
     end
 
-    subgraph W["AI Workflow"]
-        W1["npm run ai:start"]
-        W2["读取 AGENTS.md 与 workflow/*"]
-        W3["实现与修改"]
-        W4["npm run check"]
-        W5["npm run ai:finish"]
+    subgraph B["02 任务执行"]
+        B1["npm run ai:start -- 任务摘要"]
+        B2["定位修改范围<br/>site/ 或 extensions/"]
+        B3["实现功能 / 调整结构 / 修复问题"]
+        B4["npm run check"]
+        B5["npm run ai:finish -- 完成摘要"]
     end
 
-    subgraph P["Publish"]
-        P1["git add / commit / push"]
-        P2["GitHub main 更新"]
-        P3["服务器自动同步"]
+    subgraph C["03 记忆沉淀"]
+        C1["更新 current-task 状态"]
+        C2["写入 project-memory"]
+        C3["追加 work-log 历史记录"]
     end
 
-    L1 --> L2 --> L3 --> L4 --> L5
-    L5 --> W1 --> W2 --> W3 --> W4 --> W5
-    W5 --> P1 --> P2 --> P3
+    subgraph D["04 发布循环"]
+        D1["git add"]
+        D2["git commit"]
+        D3["git push origin main"]
+        D4["服务器自动同步最新版本"]
+    end
+
+    A1 --> A2 --> A3 --> A4 --> A5 --> B1
+    B1 --> B2 --> B3 --> B4 --> B5
+    B5 --> C1 --> C2 --> C3 --> D1
+    D1 --> D2 --> D3 --> D4
 ```
 
 ---
 
-## Runtime Data
+## 本地启动
 
-线上运行时数据不会写回仓库，而是写到 `storage/`：
+```bash
+git clone <your-repo-url>
+cd personblog
+cp .env.example .env
+npm install
+npm run dev
+```
+
+默认访问地址：
+
+- 前台：`http://localhost:3000`
+- 后台：`http://localhost:3000/admin-login`
+
+---
+
+## 运行时数据
+
+运行时数据不会写回仓库，而是落到 `storage/`：
 
 - `storage/site-content.json`
 - `storage/messages.json`
 - `storage/ai-config.json`
 - `storage/ai-config.private.json`
 
-这样做是为了：
+这样做的目的有三个：
 
+- 线上内容不会被代码更新覆盖
 - GitHub 保持干净
-- 服务器更新代码时不覆盖线上内容
-- AI Key 不进入版本库
-
----
-
-## Deployment
-
-服务器部署说明见：
-
-- [DEPLOY.md](./DEPLOY.md)
-- [deploy/](./deploy)
+- AI Key 等私密配置不进入仓库
 
 ---
 

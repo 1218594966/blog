@@ -1,106 +1,117 @@
-# 部署说明
+# Deployment Guide
 
-## 你现在需要知道的目录
+## What `deploy/` Is For
 
-- `site/`
-  主站代码
-- `deploy/`
-  部署脚本和 Nginx 配置
-- `storage/`
-  服务器运行时数据
+`deploy/` is the server automation area of this repository. It is not required for local development.
 
-## 一次性部署
+### File roles
 
-```bash
-cd /var/www
-git clone <your-repo-url> personblog
-cd /var/www/personblog
-cp .env.example .env
-npm install --production
-pm2 start ecosystem.config.cjs --update-env
-pm2 save
-pm2 startup
-```
+| File | Role |
+| --- | --- |
+| `deploy/setup-ubuntu.sh` | One-line Ubuntu deployment script. Installs dependencies, clones or updates the repo, prepares `.env`, configures PM2, Nginx, and GitHub auto-sync. |
+| `deploy/update-from-github.sh` | Manual update script. Pulls the latest code, installs packages, runs checks, and restarts the app. |
+| `deploy/sync-from-github.sh` | Automatic update script used by systemd timer on the server. |
+| `deploy/personblog-sync.service` | systemd service template for auto-sync. |
+| `deploy/personblog-sync.timer` | systemd timer template that periodically checks GitHub for updates. |
+| `deploy/nginx.personblog.conf` | Reference Nginx template for reverse proxy setup. |
 
-## 环境变量
+---
 
-编辑：
+## One-Line Deployment
+
+On a fresh Ubuntu server, deployment can be completed with one command.
+
+### HTTPS via Certbot
 
 ```bash
-nano /var/www/personblog/.env
+curl -fsSL https://raw.githubusercontent.com/1218594966/blog/main/deploy/setup-ubuntu.sh | sudo DOMAIN=your-domain.com WWW_DOMAIN=www.your-domain.com CERTBOT_EMAIL=you@example.com bash
 ```
 
-示例：
+### Full copy-paste example
 
-```env
-NODE_ENV=production
+```bash
+curl -fsSL https://raw.githubusercontent.com/1218594966/blog/main/deploy/setup-ubuntu.sh | sudo DOMAIN=your-domain.com WWW_DOMAIN=www.your-domain.com CERTBOT_EMAIL=you@example.com ADMIN_USERNAME=admin ADMIN_PASSWORD=change-this-password SESSION_SECRET=replace-with-a-long-random-string bash
+```
+
+### HTTP only
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/1218594966/blog/main/deploy/setup-ubuntu.sh | sudo DOMAIN=your-domain.com WWW_DOMAIN=www.your-domain.com bash
+```
+
+### Common optional variables
+
+```bash
+APP_DIR=/var/www/personblog
+APP_NAME=personblog
+REPO_URL=https://github.com/1218594966/blog.git
+BRANCH=main
 PORT=3000
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD=change-this-password
-SESSION_SECRET=change-this-to-a-long-random-string
+SESSION_SECRET=replace-with-a-long-random-string
 SITE_URL=https://your-domain.com
 ```
 
-修改后执行：
+If `.env` does not exist, the setup script creates it from `.env.example`.  
+If `.env` already exists, the script preserves it and only fills missing values that are passed in.
 
-```bash
-cd /var/www/personblog
-pm2 restart personblog --update-env
-pm2 save
-```
+---
 
-## Nginx
+## What The Script Does Automatically
 
-从仓库复制模板：
+The one-line setup script handles:
 
-```bash
-sudo cp /var/www/personblog/deploy/nginx.personblog.conf /etc/nginx/sites-available/personblog
-sudo ln -sf /etc/nginx/sites-available/personblog /etc/nginx/sites-enabled/personblog
-sudo nginx -t
-sudo systemctl reload nginx
-```
+- installing Nginx, Git, Node.js, and PM2
+- cloning or updating the repository
+- creating `.env` if missing
+- applying core environment variables
+- installing production dependencies
+- running `npm run check`
+- starting the app with PM2
+- enabling PM2 auto-start after reboot
+- creating an Nginx site config
+- enabling GitHub auto-sync with systemd timer
+- optionally requesting HTTPS via Certbot
 
-## 服务器重启后自动恢复
+After it finishes, the app is already live and configured for auto-restart on reboot.
 
-项目通过 `PM2 + systemd` 自动恢复。
+---
 
-检查：
+## DNS
 
-```bash
-pm2 status
-systemctl status pm2-root
-```
+Point these records to your server IP:
 
-## 手动更新
+- `@`
+- `www`
 
-```bash
-cd /var/www/personblog
-./deploy/update-from-github.sh
-```
+If you use Cloudflare or another proxy/CDN, make sure the domain is already resolving to the server before enabling automatic HTTPS.
 
-## 自动同步 GitHub
+---
 
-启用：
+## Runtime Data
 
-```bash
-sudo cp /var/www/personblog/deploy/personblog-sync.service /etc/systemd/system/
-sudo cp /var/www/personblog/deploy/personblog-sync.timer /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now personblog-sync.timer
-```
-
-## 运行时数据
-
-运行时数据在：
+Server-generated data is stored in:
 
 ```text
 /var/www/personblog/storage
 ```
 
-包括：
+That includes:
 
-- 站点内容
-- 留言数据
-- AI 私密配置
+- site content edited from the admin page
+- contact messages
+- AI config and private API key data
 
-它们不会被 `git pull` 覆盖。
+These files are not overwritten by `git pull`.
+
+---
+
+## Manual Update
+
+If needed, the server can still be updated manually:
+
+```bash
+cd /var/www/personblog
+./deploy/update-from-github.sh
+```

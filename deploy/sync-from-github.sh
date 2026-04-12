@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="/var/www/personblog"
-APP_NAME="personblog"
-BRANCH="main"
-LOCK_FILE="/tmp/personblog-sync.lock"
+APP_DIR="${APP_DIR:-/var/www/personblog}"
+APP_NAME="${APP_NAME:-personblog}"
+BRANCH="${BRANCH:-main}"
+LOCK_FILE="${LOCK_FILE:-/tmp/personblog-sync.lock}"
 
 exec 9>"${LOCK_FILE}"
 if ! flock -n 9; then
@@ -27,7 +27,7 @@ fi
 echo "Updates detected: ${LOCAL_HEAD} -> ${REMOTE_HEAD}"
 
 git pull --ff-only origin "${BRANCH}"
-npm install --production
+npm install --omit=dev
 npm run check
 pm2 restart "${APP_NAME}" --update-env
 pm2 save

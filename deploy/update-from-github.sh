@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="/var/www/personblog"
-APP_NAME="personblog"
-BRANCH="main"
+APP_DIR="${APP_DIR:-/var/www/personblog}"
+APP_NAME="${APP_NAME:-personblog}"
+BRANCH="${BRANCH:-main}"
 
 cd "${APP_DIR}"
 git pull --ff-only origin "${BRANCH}"
-npm install --production
+npm install --omit=dev
 npm run check
 pm2 restart "${APP_NAME}" --update-env
 pm2 save

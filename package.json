@@ -1,7 +1,7 @@
 {
   "name": "personblog",
   "version": "1.0.0",
-  "description": "可部署的个人主页与 Blog 网站，支持后台编辑、AI 对话和扩展入口。",
+  "description": "Personal site and blog hub with admin editing, AI workflow, and future extension entry points.",
   "main": "site/server.js",
   "scripts": {
     "dev": "node site/server.js",

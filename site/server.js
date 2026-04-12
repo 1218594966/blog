@@ -811,15 +811,15 @@ app.get(/^(?!\/api\/).*/, (req, res) => {
 ensureRuntimeStorage();
 
 app.listen(PORT, () => {
-  console.log(`站点已启动: http://localhost:${PORT}`);
-  console.log(`运行时数据目录: ${STORAGE_DIR}`);
+  console.log(`Site running at http://localhost:${PORT}`);
+  console.log(`Runtime storage: ${STORAGE_DIR}`);
   if (!process.env.ADMIN_USERNAME) {
-    console.log(`后台默认账号为: ${DEFAULT_ADMIN_USERNAME}，部署前请在 .env 中设置 ADMIN_USERNAME`);
+    console.log(`Default admin username is ${DEFAULT_ADMIN_USERNAME}. Set ADMIN_USERNAME in .env before production use.`);
   }
   if (!process.env.ADMIN_PASSWORD) {
-    console.log(`后台默认密码为: ${DEFAULT_ADMIN_PASSWORD}，部署前请在 .env 中设置 ADMIN_PASSWORD`);
+    console.log(`Default admin password is ${DEFAULT_ADMIN_PASSWORD}. Set ADMIN_PASSWORD in .env before production use.`);
   }
   if (!process.env.SESSION_SECRET) {
-    console.log("当前使用默认 SESSION_SECRET，部署前请在 .env 中设置 SESSION_SECRET");
+    console.log("Default SESSION_SECRET is in use. Set SESSION_SECRET in .env before production use.");
   }
 });

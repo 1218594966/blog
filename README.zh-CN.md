@@ -2,22 +2,176 @@
 
 <div align="center">
 
-### 一个用于个人主页、博客、工具入口、项目入口与 AI 协作开发的站点仓库
+### 一个把个人主页、博客、AI 工作流与未来扩展入口收在同一个仓库里的站点骨架
 
-[中文](./README.zh-CN.md) | [English](./README.en.md)
+[默认 README](./README.md) | [English](./README.en.md)
 
 </div>
 
 ---
 
-## 快速说明
+## 项目定位
 
-### 本地开发要不要执行 `deploy/`？
+这个仓库不是单一页面模板，而是一个持续生长的个人站点底座。
 
-不用。
+它同时承担四件事：
 
-`deploy/` 是给服务器部署用的。  
-如果只是本地运行：
+- 个人主页与博客
+- 未来工具页、实验页、独立项目的统一入口
+- 可编辑内容的轻量后台
+- 面向 AI 协作开发的固定工作流
+
+换句话说，它更像一个“个人数字中枢”，而不是一次性做完就不再扩展的静态网页。
+
+---
+
+## 仓库结构
+
+```text
+personblog/
+├─ site/          主站代码
+├─ extensions/    后续扩展入口
+├─ workflow/      AI 协作工作流
+├─ deploy/        服务器自动化文件
+├─ storage/       运行时数据（生产环境生成，不进 Git）
+├─ README.md
+├─ README.zh-CN.md
+├─ README.en.md
+├─ AGENTS.md
+├─ package.json
+└─ ecosystem.config.cjs
+```
+
+## 结构图
+
+```mermaid
+flowchart TD
+    R["PersonBlog Repository"] --> S["site/"]
+    R --> E["extensions/"]
+    R --> W["workflow/"]
+    R --> D["deploy/"]
+    R --> T["storage/"]
+
+    S --> S1["server.js<br/>服务端入口"]
+    S --> S2["public/<br/>前台、后台、样式、脚本"]
+    S --> S3["content/<br/>默认内容模板"]
+
+    E --> E1["tools/<br/>轻量工具"]
+    E --> E2["projects/<br/>完整项目"]
+    E --> E3["lab/<br/>实验原型"]
+
+    W --> W1["agent.md<br/>AI 执行准则"]
+    W --> W2["memory/<br/>项目记忆与历史"]
+    W --> W3["scripts/<br/>开始/输出/完成任务"]
+    W --> W4["docs/<br/>架构与路线图"]
+
+    D --> D1["setup-ubuntu.sh<br/>一键部署"]
+    D --> D2["sync/update scripts<br/>同步与更新"]
+    D --> D3["service/timer/nginx<br/>服务器模板"]
+
+    T --> T1["site-content.json"]
+    T --> T2["messages.json"]
+    T --> T3["ai-config*.json"]
+```
+
+---
+
+## 目录职责
+
+| 路径 | 作用 |
+| --- | --- |
+| `site/server.js` | 网站服务端入口。负责启动 Express、处理接口、后台登录、内容读写、AI 对话转发。 |
+| `site/public/` | 网页前端层。首页、后台页、样式、前端脚本、404 页面都在这里。 |
+| `site/content/` | 默认内容模板。新部署时会作为初始站点内容来源。 |
+| `extensions/tools/` | 以后放轻量工具，比如提示词工具、文本处理器、收藏索引。 |
+| `extensions/projects/` | 以后放完整项目入口或独立项目页。 |
+| `extensions/lab/` | 以后放实验页、草稿页、原型页。 |
+| `workflow/` | 面向 AI 协作的固定上下文、历史记忆、脚本与文档。 |
+| `deploy/` | 服务器自动化文件夹，用于一键部署、GitHub 自动同步、Nginx/PM2/systemd 配置。 |
+| `storage/` | 运行时数据目录。线上后台改动、留言、AI 私密配置都保存在这里，不跟 Git 走。 |
+
+---
+
+## 主站实现方式
+
+主站部分是“轻后端 + 静态前端页面”的结构：
+
+- Node.js + Express 负责服务端与接口
+- `site/public/` 直接提供页面与静态资源
+- `site/content/` 提供默认内容种子
+- `storage/` 保存运行时内容，保证 `git pull` 不覆盖线上数据
+
+这让项目同时具备两种特性：
+
+- 对小白友好：目录不深，容易看懂
+- 对后续扩展友好：可以持续往 `extensions/` 增加新模块
+
+---
+
+## AI 工作流
+
+这个仓库内置了一套固定的 AI 协作流程，目的不是“记录聊天”，而是把任务上下文沉淀成文件，让后续任何 AI 都能快速接手。
+
+### 读取顺序
+
+1. `AGENTS.md`
+2. `workflow/agent.md`
+3. `workflow/memory/current-task.md`
+4. `workflow/memory/project-memory.md`
+5. `workflow/memory/work-log.md`
+6. `workflow/docs/ARCHITECTURE.md`
+7. `workflow/docs/ROADMAP.md`
+
+### 常用命令
+
+```bash
+npm run ai:start -- "任务摘要"
+npm run ai:context
+npm run ai:finish -- "完成摘要"
+```
+
+### 流程图
+
+```mermaid
+flowchart TD
+    subgraph A["01 上下文装载"]
+        A1["读取 AGENTS.md"]
+        A2["读取 workflow/agent.md"]
+        A3["读取 memory/current-task.md"]
+        A4["读取 project-memory.md 与 work-log.md"]
+        A5["读取 ARCHITECTURE.md 与 ROADMAP.md"]
+    end
+
+    subgraph B["02 任务执行"]
+        B1["npm run ai:start -- 任务摘要"]
+        B2["定位修改范围<br/>site/ 或 extensions/"]
+        B3["实现功能 / 调整结构 / 修复问题"]
+        B4["npm run check"]
+        B5["npm run ai:finish -- 完成摘要"]
+    end
+
+    subgraph C["03 记忆沉淀"]
+        C1["更新 current-task 状态"]
+        C2["写入 project-memory"]
+        C3["追加 work-log 历史记录"]
+    end
+
+    subgraph D["04 发布循环"]
+        D1["git add"]
+        D2["git commit"]
+        D3["git push origin main"]
+        D4["服务器自动同步最新版本"]
+    end
+
+    A1 --> A2 --> A3 --> A4 --> A5 --> B1
+    B1 --> B2 --> B3 --> B4 --> B5
+    B5 --> C1 --> C2 --> C3 --> D1
+    D1 --> D2 --> D3 --> D4
+```
+
+---
+
+## 本地启动
 
 ```bash
 git clone <your-repo-url>
@@ -27,124 +181,30 @@ npm install
 npm run dev
 ```
 
-默认访问：
+默认访问地址：
 
 - 前台：`http://localhost:3000`
 - 后台：`http://localhost:3000/admin-login`
 
-### `site/server.js`、`site/public/`、`site/content/` 分别是干什么的？
+---
 
-- `site/server.js`
-  网站服务端入口。负责启动网站、处理接口、管理后台登录、读取和保存内容。
-- `site/public/`
-  网页层。包括首页、后台页面、样式文件、前端脚本。
-- `site/content/`
-  默认内容模板。新项目启动时的初始数据在这里，线上真正运行的数据写入 `storage/`。
+## 运行时数据
+
+运行时数据不会写回仓库，而是落到 `storage/`：
+
+- `storage/site-content.json`
+- `storage/messages.json`
+- `storage/ai-config.json`
+- `storage/ai-config.private.json`
+
+这样做的目的有三个：
+
+- 线上内容不会被代码更新覆盖
+- GitHub 保持干净
+- AI Key 等私密配置不进入仓库
 
 ---
 
-## 顶层目录
-
-```text
-personblog/
-├─ site/         当前主站
-├─ extensions/   后续工具 / 项目 / 实验
-├─ deploy/       服务器部署与同步
-├─ workflow/     AI 协作工作流
-└─ storage/      运行时数据（线上生成，不进 Git）
-```
-
-## 结构图
-
-```mermaid
-flowchart TB
-    A["PersonBlog Repository"] --> B["site/"]
-    A --> C["extensions/"]
-    A --> D["deploy/"]
-    A --> E["workflow/"]
-
-    B --> B1["server.js<br/>网站服务端入口"]
-    B --> B2["public/<br/>前台 / 后台 / 样式 / 脚本"]
-    B --> B3["content/<br/>默认内容模板"]
-
-    C --> C1["tools/<br/>轻量工具"]
-    C --> C2["projects/<br/>完整项目"]
-    C --> C3["lab/<br/>实验原型"]
-
-    D --> D1["Nginx 配置"]
-    D --> D2["PM2 / systemd"]
-    D --> D3["GitHub 自动同步"]
-
-    E --> E1["agent.md"]
-    E --> E2["memory/"]
-    E --> E3["scripts/"]
-    E --> E4["docs/"]
-```
-
----
-
-## AI 工作流
-
-### 开始任务
-
-```bash
-npm run ai:start -- "任务摘要"
-```
-
-### 输出上下文
-
-```bash
-npm run ai:context
-```
-
-### 结束任务
-
-```bash
-npm run ai:finish -- "完成摘要"
-```
-
-### 工作流图
-
-```mermaid
-flowchart TB
-    subgraph L["本地启动"]
-        L1["git clone"]
-        L2["cd personblog"]
-        L3["cp .env.example .env"]
-        L4["npm install"]
-        L5["npm run dev"]
-    end
-
-    subgraph W["AI 协作"]
-        W1["npm run ai:start"]
-        W2["读取 AGENTS.md 与 workflow/*"]
-        W3["实现与修改"]
-        W4["npm run check"]
-        W5["npm run ai:finish"]
-    end
-
-    subgraph P["发布"]
-        P1["git add / commit / push"]
-        P2["GitHub main 更新"]
-        P3["服务器自动同步"]
-    end
-
-    L1 --> L2 --> L3 --> L4 --> L5
-    L5 --> W1 --> W2 --> W3 --> W4 --> W5
-    W5 --> P1 --> P2 --> P3
-```
-
----
-
-## 部署
-
-看：
-
-- [DEPLOY.md](./DEPLOY.md)
-- [deploy/](./deploy)
-
----
-
-## 许可
+## License
 
 [MIT](./LICENSE)
