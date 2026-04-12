@@ -1,200 +1,162 @@
 # PersonBlog
 
-一个可直接部署的个人主页 + Blog 项目，适合搭建：
+一个可部署的个人网站仓库，适合继续扩展成：
 
-- 个人介绍主页
-- AI 兴趣记录站
-- 轻量博客
-- 可扩展的工具 / 项目入口站
+- 主站
+- 博客
+- AI 工具入口
+- 独立项目入口
+- AI 协作开发工作流
 
-它目前已经包含：
+这次已经把目录按“用途”重新整理过，尽量更适合小白理解。
 
-- 主站首页
-- 内容管理后台
-- 留言收集
-- OpenAI 兼容接口接入的 AI 对话区
-- 面向未来扩展的 `/tools`、`/projects`、`/lab` 入口
-- 面向 AI 协作的工作流与项目记忆系统
+## 现在最重要的 4 个文件夹
 
-## 功能概览
+### `site/`
 
-- 前台个人主页与博客展示
-- 后台登录与内容编辑
-- 访客留言提交与后台查看
-- OpenAI 兼容模型配置、自动读取模型列表、前台对话
-- PM2 部署与开机自启
-- Nginx 反向代理
-- GitHub 自动同步更新
-- AI 协作工作流、项目记忆、历史记录
+主站代码都在这里。
 
-## 项目结构
+你以后只要想改当前网站本身，优先看这里。
 
-```text
-.
-├─ content/                   # 仓库内默认内容模板
-├─ deploy/                    # 部署、更新、自动同步脚本
-├─ docs/                      # 公开文档、路线图、架构说明、AI 工作流
-├─ memory/                    # 项目记忆与工作记录
-├─ public/                    # 前台、后台、扩展入口和静态资源
-│  ├─ assets/
-│  ├─ tools/
-│  ├─ projects/
-│  └─ lab/
-├─ scripts/                   # AI 工作流辅助脚本
-├─ storage/                   # 运行时数据目录，已加入 .gitignore
-├─ AGENTS.md                  # 给支持 AGENTS.md 的 AI 工具读取的入口文件
-├─ agent.md                   # 你自己也能直接看的 AI 协作说明
-├─ .env.example
-├─ DEPLOY.md
-├─ ecosystem.config.cjs
-├─ package.json
-└─ server.js
-```
+里面主要有：
 
-## 本地开发
+- `site/server.js`
+  网站服务端入口
+- `site/public/`
+  前台页面、后台页面、样式和前端脚本
+- `site/content/`
+  默认内容模板
+
+### `extensions/`
+
+后面要增加的工具、项目、实验入口都在这里。
+
+目前有：
+
+- `extensions/tools/`
+  工具中心
+- `extensions/projects/`
+  项目中心
+- `extensions/lab/`
+  实验区
+
+以后你新增一个小工具，优先考虑放进 `extensions/tools/` 对应的页面或子目录。  
+以后你新增一个更完整的项目，优先考虑放进 `extensions/projects/`。  
+
+### `deploy/`
+
+和服务器部署、Nginx、自动同步 GitHub 有关的文件都在这里。
+
+你以后需要服务器相关配置时，优先看这里。
+
+### `workflow/`
+
+给 AI 协作开发使用的工作流都在这里。
+
+里面主要有：
+
+- `workflow/agent.md`
+  AI 读取的项目规则
+- `workflow/memory/`
+  项目记忆、当前任务、历史工作记录
+- `workflow/scripts/`
+  开始任务、输出上下文、结束任务的脚本
+- `workflow/docs/`
+  AI 工作流、架构、路线图
+
+## 根目录这些文件是干什么的
+
+- `README.md`
+  仓库总说明
+- `DEPLOY.md`
+  部署说明
+- `AGENTS.md`
+  给支持 AGENTS 规范的 AI 工具的入口文件
+- `package.json`
+  启动命令和 AI 工作流命令
+- `ecosystem.config.cjs`
+  PM2 运行配置
+- `.env.example`
+  环境变量示例
+
+## 一句话理解现在的结构
+
+- `site` = 当前主站代码
+- `extensions` = 后续新增工具和项目
+- `deploy` = 服务器部署
+- `workflow` = AI 协作工作流
+
+## 常用命令
+
+启动本地网站：
 
 ```bash
 npm install
 npm run dev
 ```
 
-默认访问：
-
-- 前台：[http://localhost:3000](http://localhost:3000)
-- 后台：[http://localhost:3000/admin-login](http://localhost:3000/admin-login)
-
-## 环境变量
-
-复制配置文件：
+AI 任务开始：
 
 ```bash
-cp .env.example .env
+npm run ai:start -- "任务摘要"
 ```
 
-建议至少配置：
+输出 AI 上下文：
 
-```env
-NODE_ENV=production
-PORT=3000
-ADMIN_USERNAME=admin
-ADMIN_PASSWORD=change-this-password
-SESSION_SECRET=change-this-to-a-long-random-string
-SITE_URL=https://your-domain.com
+```bash
+npm run ai:context
 ```
+
+AI 任务结束并写入记忆：
+
+```bash
+npm run ai:finish -- "完成摘要"
+```
+
+## AI 工作流读取顺序
+
+如果你以后让 AI 接手项目，最稳的开场方式是：
+
+```text
+先按 AGENTS.md 的要求读取上下文，再继续当前任务。
+```
+
+仓库内部的标准读取顺序是：
+
+1. `AGENTS.md`
+2. `workflow/agent.md`
+3. `workflow/memory/current-task.md`
+4. `workflow/memory/project-memory.md`
+5. `workflow/memory/work-log.md`
+6. `workflow/docs/ARCHITECTURE.md`
+7. `workflow/docs/ROADMAP.md`
 
 ## 运行时数据
 
-为了避免线上后台修改的内容被 `git pull` 覆盖，运行时数据不会写回 `content/`，而是写到 `storage/`：
+线上后台改动不会写回仓库，而是写到 `storage/`：
 
 - `storage/site-content.json`
 - `storage/messages.json`
 - `storage/ai-config.json`
 - `storage/ai-config.private.json`
 
-这意味着：
+这样做的目的是：
 
-- 可以放心在后台改内容
-- 后续代码更新不会轻易覆盖线上内容
-- AI 私密 Key 不会进入 GitHub 仓库
+- GitHub 保持干净
+- 服务器更新代码时不覆盖线上内容
+- AI Key 不进入版本库
 
 ## 部署
 
-完整部署说明见 [DEPLOY.md](./DEPLOY.md)。
+部署说明见：
 
-最基础流程：
+- [DEPLOY.md](./DEPLOY.md)
 
-```bash
-git clone <your-repo-url> /var/www/personblog
-cd /var/www/personblog
-cp .env.example .env
-npm install --production
-pm2 start ecosystem.config.cjs --update-env
-pm2 save
-pm2 startup
-```
+## 后续建议
 
-## 更新方式
+下一步最适合继续做的是：
 
-本地修改后：
-
-```bash
-git add .
-git commit -m "your change"
-git push origin main
-```
-
-服务器手动更新：
-
-```bash
-cd /var/www/personblog
-./deploy/update-from-github.sh
-```
-
-## 自动同步 GitHub
-
-如果希望服务器自动跟随 GitHub `main` 分支更新，可以启用仓库内提供的 systemd timer：
-
-```bash
-sudo cp deploy/personblog-sync.service /etc/systemd/system/
-sudo cp deploy/personblog-sync.timer /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now personblog-sync.timer
-```
-
-查看状态：
-
-```bash
-systemctl status personblog-sync.timer
-systemctl list-timers --all | grep personblog
-```
-
-自动同步会在检测到 GitHub `main` 有新提交时执行：
-
-- `git pull`
-- `npm install --production`
-- `npm run check`
-- `pm2 restart personblog --update-env`
-- `pm2 save`
-
-## AI 工作流
-
-这个项目已经内置了一套给 AI 开发助手使用的工作流。
-
-核心文件：
-
-- [agent.md](./agent.md)
-- [AGENTS.md](./AGENTS.md)
-- [项目记忆](./memory/project-memory.md)
-- [工作记录](./memory/work-log.md)
-- [AI 工作流说明](./docs/AI_WORKFLOW.md)
-
-常用命令：
-
-```bash
-npm run ai:context
-npm run ai:checkpoint -- "这次做了什么"
-```
-
-用途：
-
-- `ai:context`
-  快速输出当前项目上下文，方便交给 AI。
-- `ai:checkpoint`
-  任务结束后更新最近一次工作摘要，并追加到历史记录。
-
-## 后续扩展建议
-
-推荐把这个站点当成总入口，而不是把所有新功能都继续堆进首页。
-
-- `/tools`
-  放轻量工具和效率插件
-- `/projects`
-  放完整应用和长期维护项目
-- `/lab`
-  放实验原型和临时尝试
-
-更多规划可以看：
-
-- [项目架构](./docs/ARCHITECTURE.md)
-- [路线图](./docs/ROADMAP.md)
-- [AI 工作流](./docs/AI_WORKFLOW.md)
+1. 拆分 `site/server.js`
+2. 拆分 `site/public/assets/site.js`
+3. 拆分 `site/public/assets/admin.js`
+4. 在 `extensions/tools/` 或 `extensions/lab/` 里落地第一个真实功能页

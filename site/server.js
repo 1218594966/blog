@@ -9,12 +9,14 @@ const app = express();
 app.set("trust proxy", 1);
 
 const PORT = process.env.PORT || 3000;
+const ROOT_DIR = path.join(__dirname, "..");
 const PUBLIC_DIR = path.join(__dirname, "public");
+const EXTENSIONS_DIR = path.join(ROOT_DIR, "extensions");
 const ADMIN_LOGIN_PATH = path.join(PUBLIC_DIR, "admin-login.html");
 const DEFAULT_CONTENT_PATH = path.join(__dirname, "content", "site-content.json");
 const DEFAULT_MESSAGES_PATH = path.join(__dirname, "content", "messages.json");
 const DEFAULT_AI_CONFIG_PATH = path.join(__dirname, "content", "ai-config.json");
-const STORAGE_DIR = path.join(__dirname, "storage");
+const STORAGE_DIR = path.join(ROOT_DIR, "storage");
 const CONTENT_PATH = path.join(STORAGE_DIR, "site-content.json");
 const MESSAGES_PATH = path.join(STORAGE_DIR, "messages.json");
 const AI_CONFIG_PATH = path.join(STORAGE_DIR, "ai-config.json");
@@ -34,7 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 const rateLimitBuckets = new Map();
 
 function loadEnvFile() {
-  const envPath = path.join(__dirname, ".env");
+  const envPath = path.join(ROOT_DIR, ".env");
   if (!fs.existsSync(envPath)) return;
 
   const lines = fs.readFileSync(envPath, "utf8").split(/\r?\n/);
@@ -237,17 +239,17 @@ app.get(["/", "/index.html"], (_req, res) => {
 
 app.get("/tools", (_req, res) => {
   res.set("Cache-Control", "no-store");
-  res.sendFile(path.join(PUBLIC_DIR, "tools", "index.html"));
+  res.sendFile(path.join(EXTENSIONS_DIR, "tools", "index.html"));
 });
 
 app.get("/projects", (_req, res) => {
   res.set("Cache-Control", "no-store");
-  res.sendFile(path.join(PUBLIC_DIR, "projects", "index.html"));
+  res.sendFile(path.join(EXTENSIONS_DIR, "projects", "index.html"));
 });
 
 app.get("/lab", (_req, res) => {
   res.set("Cache-Control", "no-store");
-  res.sendFile(path.join(PUBLIC_DIR, "lab", "index.html"));
+  res.sendFile(path.join(EXTENSIONS_DIR, "lab", "index.html"));
 });
 
 app.use(express.static(PUBLIC_DIR));

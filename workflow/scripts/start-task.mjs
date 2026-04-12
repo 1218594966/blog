@@ -9,7 +9,7 @@ if (!summary) {
   process.exit(1);
 }
 
-const currentTaskPath = path.join(root, "memory", "current-task.md");
+const currentTaskPath = path.join(root, "workflow", "memory", "current-task.md");
 const now = new Date().toISOString().replace("T", " ").slice(0, 16);
 
 const content = `# Current Task
@@ -21,20 +21,12 @@ const content = `# Current Task
 
 ## Required Read Order
 
-1. \`agent.md\`
-2. \`memory/current-task.md\`
-3. \`memory/project-memory.md\`
-4. \`memory/work-log.md\`
-5. \`docs/ARCHITECTURE.md\`
-6. \`docs/ROADMAP.md\`
-
-## Execution Checklist
-
-- read required context
-- inspect relevant code
-- implement changes
-- validate changes
-- run \`npm run ai:finish -- "completed summary"\`
+1. \`workflow/agent.md\`
+2. \`workflow/memory/current-task.md\`
+3. \`workflow/memory/project-memory.md\`
+4. \`workflow/memory/work-log.md\`
+5. \`workflow/docs/ARCHITECTURE.md\`
+6. \`workflow/docs/ROADMAP.md\`
 `;
 
 fs.writeFileSync(currentTaskPath, content, "utf8");

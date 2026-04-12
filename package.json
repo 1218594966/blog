@@ -1,19 +1,19 @@
 {
   "name": "personblog",
   "version": "1.0.0",
-  "description": "可部署的个人介绍与 Blog 网站，包含前台展示、后台编辑与 AI 对话能力。",
-  "main": "server.js",
+  "description": "可部署的个人主页与 Blog 网站，支持后台编辑、AI 对话和扩展入口。",
+  "main": "site/server.js",
   "scripts": {
-    "dev": "node server.js",
-    "start": "node server.js",
-    "check": "node --check server.js && node --check public/assets/site.js && node --check public/assets/admin.js",
+    "dev": "node site/server.js",
+    "start": "node site/server.js",
+    "check": "node --check site/server.js && node --check site/public/assets/site.js && node --check site/public/assets/admin.js",
     "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:restart": "pm2 restart ecosystem.config.cjs",
     "pm2:save": "pm2 save",
-    "ai:start": "node scripts/start-task.mjs",
-    "ai:context": "node scripts/show-context.mjs",
-    "ai:finish": "node scripts/checkpoint-memory.mjs",
-    "ai:checkpoint": "node scripts/checkpoint-memory.mjs"
+    "ai:start": "node workflow/scripts/start-task.mjs",
+    "ai:context": "node workflow/scripts/show-context.mjs",
+    "ai:finish": "node workflow/scripts/checkpoint-memory.mjs",
+    "ai:checkpoint": "node workflow/scripts/checkpoint-memory.mjs"
   },
   "keywords": [
     "personal-site",

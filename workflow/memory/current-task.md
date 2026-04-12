@@ -1,6 +1,11 @@
-# Repository Bootstrap
+# Current Task
 
-Read in order:
+- Status: completed
+- Started At: archived in work-log
+- Last Updated: 2026-04-12 05:36
+- Summary: 完成目录结构重组
+
+## Required Read Order
 
 1. `workflow/agent.md`
 2. `workflow/memory/current-task.md`
@@ -8,15 +13,3 @@ Read in order:
 4. `workflow/memory/work-log.md`
 5. `workflow/docs/ARCHITECTURE.md`
 6. `workflow/docs/ROADMAP.md`
-
-Start command:
-
-```bash
-npm run ai:start -- "task summary"
-```
-
-Finish command:
-
-```bash
-npm run ai:finish -- "completed summary"
-```

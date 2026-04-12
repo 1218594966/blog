@@ -13,9 +13,9 @@ const now = new Date();
 const date = now.toISOString().slice(0, 10);
 const time = now.toISOString().replace("T", " ").slice(0, 16);
 
-const currentTaskPath = path.join(root, "memory", "current-task.md");
-const memoryPath = path.join(root, "memory", "project-memory.md");
-const logPath = path.join(root, "memory", "work-log.md");
+const currentTaskPath = path.join(root, "workflow", "memory", "current-task.md");
+const memoryPath = path.join(root, "workflow", "memory", "project-memory.md");
+const logPath = path.join(root, "workflow", "memory", "work-log.md");
 
 for (const filePath of [currentTaskPath, memoryPath, logPath]) {
   if (!fs.existsSync(filePath)) {
@@ -33,20 +33,12 @@ const currentTask = `# Current Task
 
 ## Required Read Order
 
-1. \`agent.md\`
-2. \`memory/current-task.md\`
-3. \`memory/project-memory.md\`
-4. \`memory/work-log.md\`
-5. \`docs/ARCHITECTURE.md\`
-6. \`docs/ROADMAP.md\`
-
-## Execution Checklist
-
-- read required context
-- inspect relevant code
-- implement changes
-- validate changes
-- run \`npm run ai:finish -- "completed summary"\`
+1. \`workflow/agent.md\`
+2. \`workflow/memory/current-task.md\`
+3. \`workflow/memory/project-memory.md\`
+4. \`workflow/memory/work-log.md\`
+5. \`workflow/docs/ARCHITECTURE.md\`
+6. \`workflow/docs/ROADMAP.md\`
 `;
 
 fs.writeFileSync(currentTaskPath, currentTask, "utf8");
@@ -54,8 +46,8 @@ fs.writeFileSync(currentTaskPath, currentTask, "utf8");
 let memoryText = fs.readFileSync(memoryPath, "utf8");
 const latestBlock = [
   "<!-- LAST_TASK_START -->",
-  `- 时间：${date}`,
-  `- 摘要：${summary}`,
+  `- Date: ${date}`,
+  `- Summary: ${summary}`,
   "<!-- LAST_TASK_END -->"
 ].join("\n");
 

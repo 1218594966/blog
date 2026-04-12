@@ -4,12 +4,12 @@ import path from "path";
 const root = process.cwd();
 const files = [
   "AGENTS.md",
-  "agent.md",
-  "memory/current-task.md",
-  "memory/project-memory.md",
-  "memory/work-log.md",
-  "docs/ARCHITECTURE.md",
-  "docs/ROADMAP.md"
+  "workflow/agent.md",
+  "workflow/memory/current-task.md",
+  "workflow/memory/project-memory.md",
+  "workflow/memory/work-log.md",
+  "workflow/docs/ARCHITECTURE.md",
+  "workflow/docs/ROADMAP.md"
 ];
 
 for (const relativePath of files) {
