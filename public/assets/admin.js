@@ -442,6 +442,29 @@ function renderMessages(messages) {
   `).join("");
 }
 
+function renderMessagesSafe(messages) {
+  if (!fields.messagesList) return;
+
+  if (!messages.length) {
+    fields.messagesList.innerHTML = '<div class="empty-state">还没有收到留言，访客提交后会显示在这里。</div>';
+    return;
+  }
+
+  fields.messagesList.innerHTML = messages.map((message) => `
+    <article class="message-card">
+      <div class="message-card-header">
+        <div>
+          <div class="message-card-name">${escapeHtml(message.name)}</div>
+          <div class="message-card-meta">${escapeHtml(message.email)}</div>
+        </div>
+        <div class="message-card-extra">${new Date(message.createdAt).toLocaleString("zh-CN")}</div>
+      </div>
+      <div class="message-card-extra">主题类型：${escapeHtml(message.projectType || "未填写")}</div>
+      <div class="message-card-content">${escapeHtml(message.message)}</div>
+    </article>
+  `).join("");
+}
+
 async function fetchMessages() {
   const response = await fetch("/api/messages");
   if (!response.ok) {
@@ -449,7 +472,7 @@ async function fetchMessages() {
   }
 
   const messages = await response.json();
-  renderMessages(messages);
+  renderMessagesSafe(messages);
 }
 
 async function fetchContent() {

@@ -31,6 +31,8 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 app.use(express.json({ limit: "2mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+const rateLimitBuckets = new Map();
+
 function loadEnvFile() {
   const envPath = path.join(__dirname, ".env");
   if (!fs.existsSync(envPath)) return;
@@ -64,6 +66,44 @@ function safeEqualStrings(a, b) {
   const right = Buffer.from(String(b));
   if (left.length !== right.length) return false;
   return timingSafeEqual(left, right);
+}
+
+function getClientIp(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim();
+  }
+
+  return req.ip || req.socket?.remoteAddress || "unknown";
+}
+
+function cleanupRateLimitBucket(bucket, windowMs, now) {
+  bucket.timestamps = bucket.timestamps.filter((timestamp) => now - timestamp < windowMs);
+}
+
+function createRateLimit({ keyPrefix, limit, windowMs, message }) {
+  return (req, res, next) => {
+    const now = Date.now();
+    const key = `${keyPrefix}:${getClientIp(req)}`;
+    const bucket = rateLimitBuckets.get(key) || { timestamps: [] };
+
+    cleanupRateLimitBucket(bucket, windowMs, now);
+
+    if (bucket.timestamps.length >= limit) {
+      const retryAfterSeconds = Math.ceil(windowMs / 1000);
+      res.set("Retry-After", String(retryAfterSeconds));
+
+      if (req.path.startsWith("/api/")) {
+        return res.status(429).json({ error: message });
+      }
+
+      return res.status(429).send(message);
+    }
+
+    bucket.timestamps.push(now);
+    rateLimitBuckets.set(key, bucket);
+    return next();
+  };
 }
 
 function parseCookies(cookieHeader = "") {
@@ -524,7 +564,12 @@ app.get("/api/ai/public-config", (_req, res) => {
   }
 });
 
-app.put("/api/ai/config", requireAdminAuth, (req, res) => {
+app.put("/api/ai/config", requireAdminAuth, createRateLimit({
+  keyPrefix: "ai-config-save",
+  limit: 20,
+  windowMs: 60 * 1000,
+  message: "保存过于频繁，请稍后再试"
+}), (req, res) => {
   try {
     const incoming = req.body;
     const nextConfig = {
@@ -549,7 +594,12 @@ app.put("/api/ai/config", requireAdminAuth, (req, res) => {
   }
 });
 
-app.post("/api/ai/models/test", requireAdminAuth, async (req, res) => {
+app.post("/api/ai/models/test", requireAdminAuth, createRateLimit({
+  keyPrefix: "ai-models-test",
+  limit: 20,
+  windowMs: 60 * 1000,
+  message: "读取模型列表过于频繁，请稍后再试"
+}), async (req, res) => {
   try {
     const baseUrl = typeof req.body.baseUrl === "string" ? req.body.baseUrl : "";
     const apiKey = typeof req.body.apiKey === "string" ? req.body.apiKey.trim() : "";
@@ -560,7 +610,12 @@ app.post("/api/ai/models/test", requireAdminAuth, async (req, res) => {
   }
 });
 
-app.get("/api/ai/models", async (_req, res) => {
+app.get("/api/ai/models", createRateLimit({
+  keyPrefix: "ai-models-public",
+  limit: 30,
+  windowMs: 60 * 1000,
+  message: "读取模型列表过于频繁，请稍后再试"
+}), async (_req, res) => {
   try {
     const config = readAiConfig();
     if (!config.enabled) {
@@ -581,7 +636,12 @@ app.get("/api/ai/models", async (_req, res) => {
   }
 });
 
-app.put("/api/content", requireAdminAuth, (req, res) => {
+app.put("/api/content", requireAdminAuth, createRateLimit({
+  keyPrefix: "content-save",
+  limit: 20,
+  windowMs: 60 * 1000,
+  message: "保存过于频繁，请稍后再试"
+}), (req, res) => {
   try {
     const nextContent = req.body;
 
@@ -609,7 +669,12 @@ app.get("/api/messages", requireAdminAuth, (_req, res) => {
   }
 });
 
-app.post("/api/contact", (req, res) => {
+app.post("/api/contact", createRateLimit({
+  keyPrefix: "contact-submit",
+  limit: 6,
+  windowMs: 10 * 60 * 1000,
+  message: "提交过于频繁，请稍后再试"
+}), (req, res) => {
   try {
     const payload = normalizeMessagePayload(req.body);
 
@@ -631,7 +696,12 @@ app.post("/api/contact", (req, res) => {
   }
 });
 
-app.post("/api/ai/chat", async (req, res) => {
+app.post("/api/ai/chat", createRateLimit({
+  keyPrefix: "ai-chat",
+  limit: 20,
+  windowMs: 60 * 1000,
+  message: "AI 对话请求过于频繁，请稍后再试"
+}), async (req, res) => {
   try {
     const config = readAiConfig();
     const requestedModel = typeof req.body.model === "string" ? req.body.model.trim() : "";
@@ -687,7 +757,12 @@ app.get("/admin-login", (req, res) => {
   return res.sendFile(ADMIN_LOGIN_PATH);
 });
 
-app.post("/admin-login", (req, res) => {
+app.post("/admin-login", createRateLimit({
+  keyPrefix: "admin-login",
+  limit: 10,
+  windowMs: 10 * 60 * 1000,
+  message: "登录尝试过于频繁，请稍后再试"
+}), (req, res) => {
   const username = typeof req.body.username === "string" ? req.body.username : "";
   const password = typeof req.body.password === "string" ? req.body.password : "";
 

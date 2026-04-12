@@ -93,6 +93,26 @@ function createElement(tag, className, text) {
   return element;
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function safeBackground(value, fallback = "linear-gradient(135deg,#1f1f32,#d4a853)") {
+  const raw = String(value ?? "").trim();
+  if (!raw) return fallback;
+
+  if (/^[#(),.%\-\w\s]+$/.test(raw)) {
+    return raw;
+  }
+
+  return fallback;
+}
+
 function repeatItems(items) {
   return [...items, ...items];
 }
@@ -117,15 +137,22 @@ function openModal(title, category, detail, tags, visual) {
   if (!els.modalBody || !els.modalOverlay) return;
 
   const detailMarkup = Array.isArray(detail)
-    ? detail.map((item) => `<p>${item}</p>`).join("")
-    : `<p>${detail}</p>`;
+    ? detail.map((item) => `<p>${escapeHtml(item)}</p>`).join("")
+    : `<p>${escapeHtml(detail)}</p>`;
+  const background = safeBackground(visual?.color);
+  const emoji = escapeHtml(visual?.emoji || "");
+  const safeCategory = escapeHtml(category);
+  const safeTitle = escapeHtml(title);
+  const safeTags = Array.isArray(tags)
+    ? tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")
+    : "";
 
   els.modalBody.innerHTML = `
-    <div style="width:100%;height:180px;border-radius:12px;background:${visual.color};display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:24px">${visual.emoji}</div>
-    <div class="project-category" style="margin-bottom:8px">${category}</div>
-    <h2>${title}</h2>
+    <div style="width:100%;height:180px;border-radius:12px;background:${background};display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:24px">${emoji}</div>
+    <div class="project-category" style="margin-bottom:8px">${safeCategory}</div>
+    <h2>${safeTitle}</h2>
     <div style="display:grid;gap:14px;margin-top:18px">${detailMarkup}</div>
-    <div class="project-tags" style="margin-top:20px">${tags.map((tag) => `<span>${tag}</span>`).join("")}</div>
+    <div class="project-tags" style="margin-top:20px">${safeTags}</div>
   `;
   els.modalOverlay.classList.add("active");
 }
@@ -184,8 +211,8 @@ function renderStats() {
   siteContent.stats.forEach((item) => {
     const stat = createElement("div", "stat-item");
     stat.innerHTML = `
-      <div class="stat-number">${item.value}</div>
-      <div class="stat-label">${item.label}</div>
+      <div class="stat-number">${escapeHtml(item.value)}</div>
+      <div class="stat-label">${escapeHtml(item.label)}</div>
     `;
     els.statsBar.appendChild(stat);
   });
@@ -214,9 +241,9 @@ function renderFocuses() {
     const card = createElement("article", "focus-card reveal");
     card.style.transitionDelay = `${index * 0.08}s`;
     card.innerHTML = `
-      <div class="focus-meta">${item.meta}</div>
-      <h3 class="focus-title">${item.title}</h3>
-      <p class="focus-desc">${item.desc}</p>
+      <div class="focus-meta">${escapeHtml(item.meta)}</div>
+      <h3 class="focus-title">${escapeHtml(item.title)}</h3>
+      <p class="focus-desc">${escapeHtml(item.desc)}</p>
     `;
     els.focusGrid.appendChild(card);
   });
@@ -248,11 +275,11 @@ function renderAbout() {
       const skillItem = createElement("div", "skill-item");
       skillItem.innerHTML = `
         <div class="skill-header">
-          <span class="skill-name">${skill.name}</span>
-          <span class="skill-percent">${skill.percent}%</span>
+          <span class="skill-name">${escapeHtml(skill.name)}</span>
+          <span class="skill-percent">${escapeHtml(skill.percent)}%</span>
         </div>
         <div class="skill-bar">
-          <div class="skill-fill" data-width="${skill.percent}"></div>
+          <div class="skill-fill" data-width="${escapeHtml(skill.percent)}"></div>
         </div>
       `;
       els.skillsGrid.appendChild(skillItem);
@@ -296,16 +323,19 @@ function renderProjects() {
   projects.forEach((project, index) => {
     const card = createElement("article", "project-card reveal");
     card.style.transitionDelay = `${index * 0.08}s`;
+    const tags = Array.isArray(project.tags)
+      ? project.tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")
+      : "";
     card.innerHTML = `
       <div class="project-thumb">
-        <div class="project-thumb-bg" style="background:${project.color}">${project.emoji}</div>
+        <div class="project-thumb-bg" style="background:${safeBackground(project.color)}">${escapeHtml(project.emoji)}</div>
         <div class="project-thumb-overlay"></div>
       </div>
       <div class="project-info">
-        <div class="project-category">${project.category}</div>
-        <div class="project-name">${project.title}</div>
-        <div class="project-desc">${project.desc}</div>
-        <div class="project-tags">${project.tags.map((tag) => `<span>${tag}</span>`).join("")}</div>
+        <div class="project-category">${escapeHtml(project.category)}</div>
+        <div class="project-name">${escapeHtml(project.title)}</div>
+        <div class="project-desc">${escapeHtml(project.desc)}</div>
+        <div class="project-tags">${tags}</div>
         <a href="#" class="project-link">查看详情 →</a>
       </div>
     `;
@@ -343,10 +373,10 @@ function renderExperience() {
   siteContent.experience.forEach((item, index) => {
     const experience = createElement("div", `timeline-item reveal stagger-${Math.min(index + 1, 4)}`);
     experience.innerHTML = `
-      <div class="timeline-year">${item.year}</div>
-      <div class="timeline-role">${item.role}</div>
-      <div class="timeline-company">${item.company}</div>
-      <div class="timeline-desc">${item.desc}</div>
+      <div class="timeline-year">${escapeHtml(item.year)}</div>
+      <div class="timeline-role">${escapeHtml(item.role)}</div>
+      <div class="timeline-company">${escapeHtml(item.company)}</div>
+      <div class="timeline-desc">${escapeHtml(item.desc)}</div>
     `;
     els.experienceTimeline.appendChild(experience);
   });
@@ -361,16 +391,16 @@ function renderBlog() {
     card.style.transitionDelay = `${index * 0.08}s`;
     card.innerHTML = `
       <div class="blog-card-image">
-        <div class="blog-card-image-bg" style="background:${post.color}">${post.emoji}</div>
+        <div class="blog-card-image-bg" style="background:${safeBackground(post.color)}">${escapeHtml(post.emoji)}</div>
         <div class="blog-card-image-overlay"></div>
       </div>
       <div class="blog-card-body">
         <div class="blog-meta">
-          <span>${formatDate(post.date)}</span>
-          <span>${post.tag}</span>
+          <span>${escapeHtml(formatDate(post.date))}</span>
+          <span>${escapeHtml(post.tag)}</span>
         </div>
-        <div class="blog-card-title">${post.title}</div>
-        <div class="blog-card-excerpt">${post.excerpt}</div>
+        <div class="blog-card-title">${escapeHtml(post.title)}</div>
+        <div class="blog-card-excerpt">${escapeHtml(post.excerpt)}</div>
         <a href="#" class="blog-read-more">阅读全文 →</a>
       </div>
     `;
@@ -399,12 +429,12 @@ function renderTestimonials() {
     const card = createElement("div", "testimonial-card");
     card.innerHTML = `
       <div class="testimonial-quote">"</div>
-      <div class="testimonial-text">${item.text}</div>
+      <div class="testimonial-text">${escapeHtml(item.text)}</div>
       <div class="testimonial-author">
-        <div class="testimonial-avatar">${item.initial}</div>
+        <div class="testimonial-avatar">${escapeHtml(item.initial)}</div>
         <div>
-          <div class="testimonial-name">${item.name}</div>
-          <div class="testimonial-role">${item.role}</div>
+          <div class="testimonial-name">${escapeHtml(item.name)}</div>
+          <div class="testimonial-role">${escapeHtml(item.role)}</div>
         </div>
       </div>
     `;
@@ -427,10 +457,51 @@ function renderContact() {
     items.forEach((item) => {
       const row = createElement("div", "contact-detail-item");
       row.innerHTML = `
-        <div class="contact-detail-icon">${item.icon}</div>
-        <span>${item.label}：${item.value}</span>
-        <button class="contact-detail-copy" type="button" data-copy="${item.value}">复制</button>
+        <div class="contact-detail-icon">${escapeHtml(item.icon)}</div>
+        <span>${escapeHtml(item.label)}：${escapeHtml(item.value)}</span>
+        <button class="contact-detail-copy" type="button" data-copy="${escapeHtml(item.value)}">复制</button>
       `;
+      els.contactDetails.appendChild(row);
+    });
+  }
+
+  if (els.socialLinks) {
+    els.socialLinks.innerHTML = "";
+    siteContent.contact.socials.forEach((item) => {
+      const link = createElement("a", "social-link", item.short);
+      link.href = item.href;
+      link.title = item.label;
+      link.setAttribute("aria-label", item.label);
+      link.target = item.href.startsWith("http") ? "_blank" : "_self";
+      link.rel = item.href.startsWith("http") ? "noreferrer" : "";
+      els.socialLinks.appendChild(link);
+    });
+  }
+}
+
+function renderContactSafe() {
+  if (els.contactHeading) els.contactHeading.textContent = siteContent.contact.heading;
+  if (els.contactDescription) els.contactDescription.textContent = siteContent.contact.description;
+
+  if (els.contactDetails) {
+    const items = [
+      { icon: "@", label: "邮箱", value: siteContent.contact.email },
+      { icon: "T", label: "电话", value: siteContent.contact.phone },
+      { icon: "L", label: "地址", value: siteContent.contact.location }
+    ];
+
+    els.contactDetails.innerHTML = "";
+    items.forEach((item) => {
+      const row = createElement("div", "contact-detail-item");
+      const icon = createElement("div", "contact-detail-icon", item.icon);
+      const text = createElement("span", "", `${item.label}：${item.value}`);
+      const copyButton = createElement("button", "contact-detail-copy", "复制");
+      copyButton.type = "button";
+      copyButton.setAttribute("data-copy", item.value || "");
+
+      row.appendChild(icon);
+      row.appendChild(text);
+      row.appendChild(copyButton);
       els.contactDetails.appendChild(row);
     });
   }
@@ -580,7 +651,7 @@ function renderAll() {
   renderExperience();
   renderBlog();
   renderTestimonials();
-  renderContact();
+  renderContactSafe();
   renderFooter();
 }
 
