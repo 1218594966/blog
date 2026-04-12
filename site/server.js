@@ -3,13 +3,14 @@ const fs = require("fs");
 const path = require("path");
 const { createHmac, randomUUID, timingSafeEqual } = require("crypto");
 
+const ROOT_DIR = path.join(__dirname, "..");
+
 loadEnvFile();
 
 const app = express();
 app.set("trust proxy", 1);
 
 const PORT = process.env.PORT || 3000;
-const ROOT_DIR = path.join(__dirname, "..");
 const PUBLIC_DIR = path.join(__dirname, "public");
 const EXTENSIONS_DIR = path.join(ROOT_DIR, "extensions");
 const ADMIN_LOGIN_PATH = path.join(PUBLIC_DIR, "admin-login.html");
