@@ -153,6 +153,15 @@ function clearPromptCarouselIntervals() {
   promptCarouselIntervals = [];
 }
 
+function getPromptDisplayName(item) {
+  const rawName = stripExtension(item?.image?.name);
+  if (!rawName || /^Gemini_/i.test(rawName) || /Generated_Image/i.test(rawName)) {
+    return item?.collection?.headline || item?.collection?.title || "Prompt Work";
+  }
+
+  return rawName;
+}
+
 function setAiStatus(message, isError = false) {
   if (!els.aiStatusText) return;
   els.aiStatusText.textContent = message || "";
@@ -475,13 +484,18 @@ function renderPromptGallery() {
 
   els.promptGallerySection.style.display = "";
   els.promptCollections.innerHTML = "";
-  const galleryItems = collections.flatMap((collection) => getPromptImages(collection).map((image, index) => ({
-    collection,
-    image,
-    imageIndex: index,
-    readableName: stripExtension(image.name),
-    jsonRaw: collection.promptJsonRaw || JSON.stringify(collection.promptJson || {}, null, 2)
-  })));
+  const galleryItems = [];
+  collections.forEach((collection) => {
+    getPromptImages(collection).forEach((image, imageIndex) => {
+      galleryItems.push({
+        collection,
+        image,
+        imageIndex,
+        readableName: stripExtension(image.name),
+        jsonRaw: collection.promptJsonRaw || JSON.stringify(collection.promptJson || {}, null, 2)
+      });
+    });
+  });
 
   if (!galleryItems.length) {
     els.promptGallerySection.style.display = "none";
@@ -490,16 +504,19 @@ function renderPromptGallery() {
 
   const highlightedIndex = galleryItems.findIndex((item) => /仙金系列公主/i.test(item.image.name || ""));
   const initialIndex = highlightedIndex >= 0 ? highlightedIndex : 0;
+  const loopItems = [...galleryItems, ...galleryItems];
   const gallery = createElement("section", "prompt-unified-gallery reveal");
 
   gallery.innerHTML = `
     <div class="prompt-flow-layout">
       <div class="prompt-flow-left">
         <div class="prompt-flow-window">
-          <div class="prompt-flow-track" data-prompt-track>
-            ${galleryItems.map((item) => `
-              <button type="button" class="prompt-flow-slide" data-prompt-slide="${item.collection.slug}">
-                <img src="${item.image.url}" alt="${escapeHtml(item.readableName)}" loading="lazy">
+          <div class="prompt-flow-ribbon" data-prompt-track>
+            ${loopItems.map((item, renderIndex) => `
+              <button type="button" class="prompt-flow-card" data-prompt-card="${renderIndex}" data-prompt-index="${renderIndex % galleryItems.length}">
+                <div class="prompt-flow-card-media">
+                  <img src="${item.image.url}" alt="${escapeHtml(getPromptDisplayName(item))}" loading="lazy">
+                </div>
               </button>
             `).join("")}
           </div>
@@ -540,31 +557,27 @@ function renderPromptGallery() {
   `;
 
   const track = gallery.querySelector("[data-prompt-track]");
-  const thumbs = Array.from(gallery.querySelectorAll("[data-prompt-thumb]"));
-  const status = gallery.querySelector("[data-prompt-status]");
-  const jsonStatus = gallery.querySelector("[data-prompt-json-status]");
-  const progressBar = gallery.querySelector("[data-prompt-progress]");
+  const cards = Array.from(gallery.querySelectorAll("[data-prompt-card]"));
+  const thumbs = [];
+  const status = null;
+  const jsonStatus = null;
+  const progressBar = null;
   const codeBlock = gallery.querySelector("[data-prompt-code]");
   const jsonPanel = gallery.querySelector("[data-json-panel]");
-  const thumbRail = gallery.querySelector("[data-prompt-rail]");
+  const thumbRail = null;
   let activeIndex = initialIndex;
 
-  function applyActiveItem(nextIndex) {
-    if (!galleryItems.length || !track || !codeBlock) return;
+  function applyActiveItem(nextIndex, options = {}) {
+    if (!galleryItems.length || !codeBlock) return;
+    const { animateCode = true } = options;
     activeIndex = (nextIndex + galleryItems.length) % galleryItems.length;
 
     const activeItem = galleryItems[activeIndex];
-    const activeCollection = activeItem.collection;
-    track.style.transform = `translateX(-${activeIndex * 100}%)`;
-
-    thumbs.forEach((thumb, thumbIndex) => {
-      thumb.classList.toggle("active", thumbIndex === activeIndex);
-      if (thumbIndex === activeIndex) {
-        thumb.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
-      }
+    cards.forEach((card) => {
+      card.classList.toggle("is-active", Number(card.getAttribute("data-prompt-index")) === activeIndex);
     });
 
-    if (status) {
+    if (false) {
       status.textContent = `${activeIndex + 1} / ${galleryItems.length} · ${activeItem.readableName}`;
     }
 
@@ -581,9 +594,11 @@ function renderPromptGallery() {
     }
 
     codeBlock.textContent = activeItem.jsonRaw || "暂无 JSON 提示词。";
-    codeBlock.classList.remove("is-animating");
-    void codeBlock.offsetWidth;
-    codeBlock.classList.add("is-animating");
+    if (animateCode) {
+      codeBlock.classList.remove("is-animating");
+      void codeBlock.offsetWidth;
+      codeBlock.classList.add("is-animating");
+    }
   }
 
   thumbs.forEach((thumbButton) => {
@@ -605,46 +620,38 @@ function renderPromptGallery() {
     openPromptJsonModal(activeItem.collection, activeItem.image);
   });
 
-  gallery.querySelectorAll("[data-prompt-slide]").forEach((slideButton, slideIndex) => {
+  gallery.querySelectorAll("[data-prompt-card]").forEach((slideButton) => {
+    slideButton.addEventListener("mouseenter", () => {
+      const cardIndex = Number(slideButton.getAttribute("data-prompt-index"));
+      applyActiveItem(Number.isFinite(cardIndex) ? cardIndex : activeIndex);
+    });
+
     slideButton.addEventListener("click", () => {
-      const activeItem = galleryItems[slideIndex];
+      const cardIndex = Number(slideButton.getAttribute("data-prompt-index"));
+      const activeItem = galleryItems[Number.isFinite(cardIndex) ? cardIndex : activeIndex];
       showModalContent({
-        coverMarkup: `<img class="modal-cover-image" src="${activeItem.image.url}" alt="${escapeHtml(activeItem.readableName)}">`,
+        coverMarkup: `<img class="modal-cover-image" src="${activeItem.image.url}" alt="${escapeHtml(getPromptDisplayName(activeItem))}">`,
         category: `${activeItem.collection.folderName} · 样例图`,
-        title: activeItem.readableName,
+        title: getPromptDisplayName(activeItem),
         bodyMarkup: `<p class="prompt-modal-description">${escapeHtml(activeItem.collection.description || "")}</p>`,
         tags: activeItem.collection.highlights || []
       });
     });
   });
 
-  applyActiveItem(initialIndex);
+  if (track) {
+    const loopDuration = Math.max(26, galleryItems.length * 4.8);
+    track.style.setProperty("--prompt-loop-duration", `${loopDuration}s`);
+  }
+
+  applyActiveItem(initialIndex, { animateCode: false });
 
   if (galleryItems.length > 1) {
-    let timerId = window.setInterval(() => {
+    const loopDuration = Math.max(26, galleryItems.length * 4.8);
+    const rotationDelay = Math.max(3200, Math.round((loopDuration * 1000) / galleryItems.length));
+    const timerId = window.setInterval(() => {
       applyActiveItem(activeIndex + 1);
-    }, 3200);
-
-    const resumeAutoplay = () => {
-      window.clearInterval(timerId);
-      timerId = window.setInterval(() => {
-        applyActiveItem(activeIndex + 1);
-      }, 3200);
-    };
-
-    gallery.addEventListener("mouseenter", () => {
-      window.clearInterval(timerId);
-    });
-
-    gallery.addEventListener("mouseleave", () => {
-      resumeAutoplay();
-    });
-
-    thumbRail?.addEventListener("wheel", (event) => {
-      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
-      event.preventDefault();
-      thumbRail.scrollLeft += event.deltaY;
-    }, { passive: false });
+    }, rotationDelay);
 
     promptCarouselIntervals.push(() => window.clearInterval(timerId));
   }
@@ -787,6 +794,9 @@ function applyAiSectionConfig() {
   if (els.aiChatInput) {
     els.aiChatInput.placeholder = aiPublicConfig.placeholder || "想问点什么？";
   }
+  if (!aiPublicConfig?.configured) {
+    setAiStatus("AI 妯″瀷灏氭湭閰嶇疆锛屽彲鍦ㄥ悗鍙板～鍐欏熀鏈厤缃悗鍚敤銆?");
+  }
 }
 
 async function loadAiPublicConfig() {
@@ -801,6 +811,12 @@ async function loadAiPublicConfig() {
 
 async function refreshAiModels(showStatus = true) {
   if (!els.aiModelSelect) return;
+
+  if (!aiPublicConfig?.configured) {
+    els.aiModelSelect.innerHTML = '<option value="">鏆傛湭閰嶇疆妯″瀷</option>';
+    setAiStatus("AI 妯″瀷灏氭湭閰嶇疆锛屽彲鍦ㄥ悗鍙板～鍐欍€?");
+    return;
+  }
 
   if (showStatus) {
     setAiStatus("正在读取模型列表...");
@@ -820,7 +836,7 @@ async function refreshAiModels(showStatus = true) {
 
   if (!models.length) {
     els.aiModelSelect.innerHTML = '<option value="">暂无可用模型</option>';
-    setAiStatus("接口返回了空模型列表。", true);
+    setAiStatus(result.message || "接口返回了空模型列表。", true);
     return;
   }
 
@@ -1359,7 +1375,7 @@ async function init() {
     setupAiLab();
     setupTestimonials();
     observeReveals();
-    if (aiPublicConfig?.enabled) {
+    if (aiPublicConfig?.enabled && aiPublicConfig?.configured) {
       refreshAiModels(false).catch((error) => {
         console.error(error);
         setAiStatus(error.message || "模型列表读取失败", true);

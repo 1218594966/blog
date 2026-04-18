@@ -482,6 +482,7 @@ function buildAiHeaders(apiKey) {
 function sanitizeAiConfigForClient(config) {
   return {
     enabled: Boolean(config.enabled),
+    configured: Boolean(config.baseUrl && config.apiKey),
     sectionTitle: config.sectionTitle || defaultAiConfig().sectionTitle,
     sectionDescription: config.sectionDescription || defaultAiConfig().sectionDescription,
     model: config.model || "",
@@ -648,16 +649,29 @@ app.get("/api/ai/models", createRateLimit({
   try {
     const config = readAiConfig();
     if (!config.enabled) {
-      return res.status(400).json({ error: "AI 对话区当前未启用" });
+      return res.json({
+        baseUrl: "",
+        models: [],
+        selectedModel: "",
+        configured: false,
+        message: "AI 对话区当前未启用"
+      });
     }
 
     if (!config.baseUrl || !config.apiKey) {
-      return res.status(400).json({ error: "AI 接口尚未配置完整" });
+      return res.json({
+        baseUrl: "",
+        models: [],
+        selectedModel: "",
+        configured: false,
+        message: "AI 接口尚未配置完整"
+      });
     }
 
     const result = await fetchAiModels(config.baseUrl, config.apiKey);
     return res.json({
       ...result,
+      configured: true,
       selectedModel: config.model || ""
     });
   } catch (error) {

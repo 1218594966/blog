@@ -613,6 +613,93 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
   gap: 12px;
 }
 
+.prompt-gallery-shell,
+.prompt-stage-toolbar,
+.prompt-stage-progress,
+.prompt-thumb-rail,
+.prompt-json-status {
+  display: none !important;
+}
+
+.prompt-flow-window {
+  min-height: clamp(420px, 46vw, 600px);
+  padding: 18px;
+}
+
+.prompt-flow-window::before,
+.prompt-flow-window::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: clamp(36px, 5vw, 72px);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.prompt-flow-window::before {
+  left: 0;
+  background: linear-gradient(90deg, rgba(14, 14, 22, 0.96), rgba(14, 14, 22, 0));
+}
+
+.prompt-flow-window::after {
+  right: 0;
+  background: linear-gradient(270deg, rgba(14, 14, 22, 0.96), rgba(14, 14, 22, 0));
+}
+
+.prompt-flow-ribbon {
+  display: flex;
+  align-items: stretch;
+  gap: 18px;
+  width: max-content;
+  animation: promptRibbonLoop var(--prompt-loop-duration, 38s) linear infinite;
+  will-change: transform;
+}
+
+.prompt-flow-card {
+  flex: 0 0 clamp(220px, 25vw, 320px);
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.prompt-flow-card:nth-child(3n) {
+  margin-top: 18px;
+}
+
+.prompt-flow-card:nth-child(4n) {
+  margin-top: 40px;
+}
+
+.prompt-flow-card-media {
+  display: grid;
+  place-items: center;
+  min-height: clamp(300px, 34vw, 460px);
+  padding: 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background:
+    radial-gradient(circle at top, rgba(212, 168, 83, 0.08), transparent 45%),
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.018)),
+    rgba(18, 18, 28, 0.9);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.22);
+  transition: transform 0.5s ease, border-color 0.5s ease, box-shadow 0.5s ease;
+}
+
+.prompt-flow-card.is-active .prompt-flow-card-media {
+  border-color: rgba(212, 168, 83, 0.34);
+  box-shadow: 0 20px 54px rgba(212, 168, 83, 0.12);
+  transform: translateY(-10px);
+}
+
+.prompt-flow-card img {
+  width: 100%;
+  height: 100%;
+  max-height: clamp(260px, 32vw, 420px);
+  object-fit: contain;
+  filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.28));
+}
+
 .ai-lab-grid {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -1001,6 +1088,10 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
 @keyframes promptCodePulse {
   0% { opacity: 0.6; transform: translateY(10px); }
   100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes promptRibbonLoop {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 
 @media (max-width: 1280px) {
