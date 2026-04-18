@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "node site/server.js",
     "start": "node site/server.js",
+    "sync:prompts": "node scripts/sync-prompt-assets.mjs",
     "check": "node --check site/server.js && node --check site/public/assets/site.js && node --check site/public/assets/admin.js",
     "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:restart": "pm2 restart ecosystem.config.cjs",

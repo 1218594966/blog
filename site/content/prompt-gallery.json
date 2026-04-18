@@ -1,0 +1,491 @@
+{
+  "generatedAt": "2026-04-18T10:50:20.706Z",
+  "collectionCount": 2,
+  "collections": [
+    {
+      "id": "collection-01",
+      "slug": "collection-01",
+      "folderName": "全身套装拆解",
+      "title": "全身套装拆解",
+      "headline": "全景式角色深度概念分解图生成",
+      "description": "以 中心+环绕式结构图 为骨架，组合服装分层、表情集、材质特写和生活化道具，适合概念设计作品集展示。",
+      "highlights": [
+        "全景式角色深度概念分解图生成",
+        "中心+环绕式结构图",
+        "高质量2D插画 + 概念设计稿风格",
+        "横向或接近16:9比例"
+      ],
+      "metrics": [
+        {
+          "label": "样例图片",
+          "value": "5 张"
+        },
+        {
+          "label": "表情维度",
+          "value": "5 组"
+        },
+        {
+          "label": "结构模块",
+          "value": "9 项"
+        }
+      ],
+      "coverImage": "/prompt-assets/collection-01/%E4%B8%8D%E7%9F%A5%E7%81%AB%E8%88%9E.png",
+      "images": [
+        {
+          "name": "Gemini_Generated_Image_209eco209eco209e.png",
+          "url": "/prompt-assets/collection-01/Gemini_Generated_Image_209eco209eco209e.png"
+        },
+        {
+          "name": "不知火舞.png",
+          "url": "/prompt-assets/collection-01/%E4%B8%8D%E7%9F%A5%E7%81%AB%E8%88%9E.png"
+        },
+        {
+          "name": "夜鸦.png",
+          "url": "/prompt-assets/collection-01/%E5%A4%9C%E9%B8%A6.png"
+        },
+        {
+          "name": "小雅.png",
+          "url": "/prompt-assets/collection-01/%E5%B0%8F%E9%9B%85.png"
+        },
+        {
+          "name": "时尚秋冬百搭穿戴套装.png",
+          "url": "/prompt-assets/collection-01/%E6%97%B6%E5%B0%9A%E7%A7%8B%E5%86%AC%E7%99%BE%E6%90%AD%E7%A9%BF%E6%88%B4%E5%A5%97%E8%A3%85.png"
+        }
+      ],
+      "imageCount": 5,
+      "promptText": "帮我生成图片：你是一位顶尖的游戏与动漫概念美术设计大师（Concept Artist），尤其擅长制作高度详尽的角色设定图（Character Sheet）。你具备“像素级拆解”的洞察力，能够清晰解析角色的服装层次、捕捉细腻的表情变化，并将相关物品具象化还原。你特别善于通过女性角色的私密物品、随身物件与生活细节，侧面塑造其性格与背景故事。\r\n任务目标\r\n根据用户上传或描述的角色形象，生成一张“全景式角色深度概念分解图”。该图需包含中心人物的全身立绘，并在周围系统性地展示其服装分层、表情变化、核心道具、材质细节，以及富有生活气息的私密物品与随身物件。\r\n视觉规范\r\n1. 构图布局（Layout）\r\n- 中心位：放置角色全身立绘或标志性动态姿势，作为视觉焦点。\r\n- 环绕位：在中心人物四周有序排布各类拆解元素，保持画面平衡。\r\n- 视觉引导：使用自然的手绘箭头或引导线，将各元素与人物对应部位连接（如手袋连至手部）。\r\n2. 拆解内容（Deconstruction Details）\r\n- 服装分层（加强版）\r\n- 将服装按单品拆解展示，若为多层穿搭，需呈现脱下外层后的内搭状态。\r\n私密内着拆解——独立展示内衣、内裤、丝袜等贴身衣物，强调设计细节与材质质感（如蕾丝花纹、透肉感、剪裁结构等）。\r\n- 表情集\r\n- 在画面一角绘制3-4个头部特写，呈现不同情绪状态（如冷漠、害羞、惊讶、失神，或化妆时的专注神态）。\r\n- 材质与细节特写（加强版）\r\n- 对1-2处关键部位（如服饰纹理、饰品）进行放大特写。\r\n- 新增：物品材质特写——细致刻画小物料的质感，如皮革、金属、织物等。\r\n- 关联性生活切片\r\n- 随身包袋与内容物：绘制日常用包并展示其内部散落物品（如钥匙、卡片、小物）。\r\n- 美妆与护理组合：呈现常用化妆品或护理用品布局。\r\n- 私密生活物件：根据角色设定，具象化其私人物品，如日记本、药盒、电子烟等，以增强角色真实感。\r\n-足部特写风格与注释\r\n- 画风：采用高质量的2D插画或概念草图风格，线条清晰、结构准确。\r\n- 背景：使用米黄、羊皮纸或浅灰等低饱和度纹理背景，营造手稿氛围。\r\n- 注释：在每个拆解元素旁模拟手写字体，简要说明材质、品牌或设计意图。\r\n- 注释：全图字体采用中文简体。",
+      "promptTextName": "提示词(文本).txt",
+      "promptJson": {
+        "role_definition": {
+          "profession": "顶尖动漫概念美术设计大师（Concept Artist）",
+          "expertise": [
+            "高度详尽的角色设定图（Character Sheet）制作",
+            "像素级结构拆解能力",
+            "服装层次分析与结构还原",
+            "微表情与情绪捕捉",
+            "物品具象化表达",
+            "通过生活物件构建角色背景与性格"
+          ],
+          "design_philosophy": [
+            "通过细节塑造人物真实性",
+            "通过物件体现角色生活轨迹",
+            "通过材质表达世界观与身份"
+          ]
+        },
+        "task": {
+          "name": "全景式角色深度概念分解图生成",
+          "goal": [
+            "生成一张完整角色设定拆解图",
+            "中心人物为视觉核心",
+            "周围包含系统性拆解信息",
+            "实现角色视觉+叙事双重表达"
+          ],
+          "output_requirements": [
+            "角色完整立绘",
+            "结构拆解清晰",
+            "信息丰富但不混乱",
+            "具备商业级概念设计水准"
+          ]
+        },
+        "visual_specification": {
+          "layout": {
+            "type": "中心+环绕式结构图",
+            "center": {
+              "content": "角色全身立绘或标志性动态姿势",
+              "requirements": [
+                "人体比例准确",
+                "服装完整呈现",
+                "姿态具有性格表达",
+                "视觉焦点明确"
+              ]
+            },
+            "surroundings": {
+              "content": "拆解元素围绕人物排布",
+              "rules": [
+                "分区清晰（服装/表情/物品/材质）",
+                "布局均衡",
+                "避免信息重叠",
+                "视觉阅读路径清晰"
+              ]
+            },
+            "guidance_system": {
+              "type": "手绘引导线 + 箭头",
+              "style": "概念设计稿风格",
+              "rules": [
+                "自然连接人物与拆解元素",
+                "线条轻盈但清晰",
+                "避免干扰主体"
+              ]
+            }
+          }
+        },
+        "deconstruction": {
+          "clothing_system": {
+            "layering": {
+              "type": "多层服装拆解展示",
+              "details": [
+                "外层服装独立展示",
+                "中层结构展示",
+                "内搭状态展示",
+                "穿脱逻辑清晰"
+              ]
+            },
+            "inner_wear": {
+              "type": "贴身衣物拆解展示",
+              "items": [
+                "内衣",
+                "内裤",
+                "丝袜"
+              ],
+              "focus": [
+                "蕾丝纹理",
+                "透肉质感",
+                "裁剪结构",
+                "弹性与贴合度"
+              ],
+              "style_requirement": "设计研究用途表达，避免低级化呈现"
+            }
+          },
+          "expression_set": {
+            "count": "3-4个头部特写",
+            "placement": "画面一角独立区域",
+            "expressions": [
+              "冷漠",
+              "害羞",
+              "惊讶",
+              "失神",
+              "专注（如化妆时）"
+            ],
+            "details": [
+              "眼神变化清晰",
+              "嘴部与面部肌肉变化真实",
+              "表情差异明显但统一角色身份"
+            ]
+          },
+          "material_closeup": {
+            "focus_area": [
+              "服饰纹理",
+              "饰品结构"
+            ],
+            "zoom_requirement": [
+              "1-2处重点放大",
+              "清晰展示细节"
+            ],
+            "additional_materials": [
+              "皮革",
+              "金属",
+              "织物",
+              "半透明材质"
+            ]
+          },
+          "lifestyle_elements": {
+            "bag_system": {
+              "type": "随身包及内容物拆解",
+              "contents": [
+                "钥匙",
+                "卡片",
+                "小型随身物件"
+              ],
+              "presentation": "散落式展示"
+            },
+            "cosmetics": {
+              "type": "美妆与护理组合",
+              "items": [
+                "口红",
+                "粉底",
+                "护肤品",
+                "小型镜子"
+              ],
+              "layout": "整齐排列或使用中状态"
+            },
+            "personal_items": {
+              "type": "私人物品",
+              "examples": [
+                "日记本",
+                "药盒",
+                "电子烟",
+                "手机或耳机"
+              ],
+              "purpose": "强化人物生活真实性与背景暗示"
+            }
+          },
+          "foot_detail": {
+            "type": "足部特写",
+            "focus": [
+              "鞋子结构",
+              "袜子/丝袜细节",
+              "脚部比例与姿态"
+            ]
+          }
+        },
+        "art_style": {
+          "type": "高质量2D插画 + 概念设计稿风格",
+          "line": {
+            "quality": "清晰、干净、结构准确",
+            "variation": "主线明确，辅线辅助结构"
+          },
+          "rendering": {
+            "style": "精细上色 + 局部强化",
+            "details": [
+              "关键部位高精度渲染",
+              "次要区域保持设计稿质感"
+            ]
+          }
+        },
+        "background": {
+          "color": [
+            "米黄色",
+            "羊皮纸色",
+            "浅灰色"
+          ],
+          "texture": "轻微纸张或纹理背景",
+          "purpose": "营造设计手稿氛围，不干扰主体"
+        },
+        "annotation": {
+          "style": "手写风格注释",
+          "language": "简体中文",
+          "content": [
+            "材质说明",
+            "品牌或设计来源",
+            "功能用途",
+            "结构解释"
+          ],
+          "rules": [
+            "简洁清晰",
+            "避免过长文本",
+            "与视觉元素紧密关联"
+          ]
+        },
+        "enhancements": {
+          "consistency_control": [
+            "确保所有拆解元素属于同一角色",
+            "避免脸部变化导致人物识别混乱"
+          ],
+          "visual_hierarchy": [
+            "中心人物最突出",
+            "拆解信息次级",
+            "注释为辅助层"
+          ],
+          "color_management": [
+            "整体色调统一",
+            "局部重点区域可强化色彩",
+            "避免杂乱"
+          ],
+          "detail_density": [
+            "信息丰富但分区清晰",
+            "避免信息堆叠",
+            "保持专业展示感"
+          ]
+        },
+        "output": {
+          "format": "横向或接近16:9比例",
+          "resolution": "适合高清展示与印刷",
+          "usage": [
+            "游戏角色设定",
+            "视觉开发文档",
+            "作品集展示",
+            "软件生成模块输入"
+          ]
+        }
+      },
+      "promptJsonRaw": "{\r\n  \"role_definition\": {\r\n    \"profession\": \"顶尖动漫概念美术设计大师（Concept Artist）\",\r\n    \"expertise\": [\r\n      \"高度详尽的角色设定图（Character Sheet）制作\",\r\n      \"像素级结构拆解能力\",\r\n      \"服装层次分析与结构还原\",\r\n      \"微表情与情绪捕捉\",\r\n      \"物品具象化表达\",\r\n      \"通过生活物件构建角色背景与性格\"\r\n    ],\r\n    \"design_philosophy\": [\r\n      \"通过细节塑造人物真实性\",\r\n      \"通过物件体现角色生活轨迹\",\r\n      \"通过材质表达世界观与身份\"\r\n    ]\r\n  },\r\n\r\n  \"task\": {\r\n    \"name\": \"全景式角色深度概念分解图生成\",\r\n    \"goal\": [\r\n      \"生成一张完整角色设定拆解图\",\r\n      \"中心人物为视觉核心\",\r\n      \"周围包含系统性拆解信息\",\r\n      \"实现角色视觉+叙事双重表达\"\r\n    ],\r\n    \"output_requirements\": [\r\n      \"角色完整立绘\",\r\n      \"结构拆解清晰\",\r\n      \"信息丰富但不混乱\",\r\n      \"具备商业级概念设计水准\"\r\n    ]\r\n  },\r\n\r\n  \"visual_specification\": {\r\n    \"layout\": {\r\n      \"type\": \"中心+环绕式结构图\",\r\n      \"center\": {\r\n        \"content\": \"角色全身立绘或标志性动态姿势\",\r\n        \"requirements\": [\r\n          \"人体比例准确\",\r\n          \"服装完整呈现\",\r\n          \"姿态具有性格表达\",\r\n          \"视觉焦点明确\"\r\n        ]\r\n      },\r\n      \"surroundings\": {\r\n        \"content\": \"拆解元素围绕人物排布\",\r\n        \"rules\": [\r\n          \"分区清晰（服装/表情/物品/材质）\",\r\n          \"布局均衡\",\r\n          \"避免信息重叠\",\r\n          \"视觉阅读路径清晰\"\r\n        ]\r\n      },\r\n      \"guidance_system\": {\r\n        \"type\": \"手绘引导线 + 箭头\",\r\n        \"style\": \"概念设计稿风格\",\r\n        \"rules\": [\r\n          \"自然连接人物与拆解元素\",\r\n          \"线条轻盈但清晰\",\r\n          \"避免干扰主体\"\r\n        ]\r\n      }\r\n    }\r\n  },\r\n\r\n  \"deconstruction\": {\r\n    \"clothing_system\": {\r\n      \"layering\": {\r\n        \"type\": \"多层服装拆解展示\",\r\n        \"details\": [\r\n          \"外层服装独立展示\",\r\n          \"中层结构展示\",\r\n          \"内搭状态展示\",\r\n          \"穿脱逻辑清晰\"\r\n        ]\r\n      },\r\n      \"inner_wear\": {\r\n        \"type\": \"贴身衣物拆解展示\",\r\n        \"items\": [\r\n          \"内衣\",\r\n          \"内裤\",\r\n          \"丝袜\"\r\n        ],\r\n        \"focus\": [\r\n          \"蕾丝纹理\",\r\n          \"透肉质感\",\r\n          \"裁剪结构\",\r\n          \"弹性与贴合度\"\r\n        ],\r\n        \"style_requirement\": \"设计研究用途表达，避免低级化呈现\"\r\n      }\r\n    },\r\n\r\n    \"expression_set\": {\r\n      \"count\": \"3-4个头部特写\",\r\n      \"placement\": \"画面一角独立区域\",\r\n      \"expressions\": [\r\n        \"冷漠\",\r\n        \"害羞\",\r\n        \"惊讶\",\r\n        \"失神\",\r\n        \"专注（如化妆时）\"\r\n      ],\r\n      \"details\": [\r\n        \"眼神变化清晰\",\r\n        \"嘴部与面部肌肉变化真实\",\r\n        \"表情差异明显但统一角色身份\"\r\n      ]\r\n    },\r\n\r\n    \"material_closeup\": {\r\n      \"focus_area\": [\r\n        \"服饰纹理\",\r\n        \"饰品结构\"\r\n      ],\r\n      \"zoom_requirement\": [\r\n        \"1-2处重点放大\",\r\n        \"清晰展示细节\"\r\n      ],\r\n      \"additional_materials\": [\r\n        \"皮革\",\r\n        \"金属\",\r\n        \"织物\",\r\n        \"半透明材质\"\r\n      ]\r\n    },\r\n\r\n    \"lifestyle_elements\": {\r\n      \"bag_system\": {\r\n        \"type\": \"随身包及内容物拆解\",\r\n        \"contents\": [\r\n          \"钥匙\",\r\n          \"卡片\",\r\n          \"小型随身物件\"\r\n        ],\r\n        \"presentation\": \"散落式展示\"\r\n      },\r\n      \"cosmetics\": {\r\n        \"type\": \"美妆与护理组合\",\r\n        \"items\": [\r\n          \"口红\",\r\n          \"粉底\",\r\n          \"护肤品\",\r\n          \"小型镜子\"\r\n        ],\r\n        \"layout\": \"整齐排列或使用中状态\"\r\n      },\r\n      \"personal_items\": {\r\n        \"type\": \"私人物品\",\r\n        \"examples\": [\r\n          \"日记本\",\r\n          \"药盒\",\r\n          \"电子烟\",\r\n          \"手机或耳机\"\r\n        ],\r\n        \"purpose\": \"强化人物生活真实性与背景暗示\"\r\n      }\r\n    },\r\n\r\n    \"foot_detail\": {\r\n      \"type\": \"足部特写\",\r\n      \"focus\": [\r\n        \"鞋子结构\",\r\n        \"袜子/丝袜细节\",\r\n        \"脚部比例与姿态\"\r\n      ]\r\n    }\r\n  },\r\n\r\n  \"art_style\": {\r\n    \"type\": \"高质量2D插画 + 概念设计稿风格\",\r\n    \"line\": {\r\n      \"quality\": \"清晰、干净、结构准确\",\r\n      \"variation\": \"主线明确，辅线辅助结构\"\r\n    },\r\n    \"rendering\": {\r\n      \"style\": \"精细上色 + 局部强化\",\r\n      \"details\": [\r\n        \"关键部位高精度渲染\",\r\n        \"次要区域保持设计稿质感\"\r\n      ]\r\n    }\r\n  },\r\n\r\n  \"background\": {\r\n    \"color\": [\r\n      \"米黄色\",\r\n      \"羊皮纸色\",\r\n      \"浅灰色\"\r\n    ],\r\n    \"texture\": \"轻微纸张或纹理背景\",\r\n    \"purpose\": \"营造设计手稿氛围，不干扰主体\"\r\n  },\r\n\r\n  \"annotation\": {\r\n    \"style\": \"手写风格注释\",\r\n    \"language\": \"简体中文\",\r\n    \"content\": [\r\n      \"材质说明\",\r\n      \"品牌或设计来源\",\r\n      \"功能用途\",\r\n      \"结构解释\"\r\n    ],\r\n    \"rules\": [\r\n      \"简洁清晰\",\r\n      \"避免过长文本\",\r\n      \"与视觉元素紧密关联\"\r\n    ]\r\n  },\r\n\r\n  \"enhancements\": {\r\n    \"consistency_control\": [\r\n      \"确保所有拆解元素属于同一角色\",\r\n      \"避免脸部变化导致人物识别混乱\"\r\n    ],\r\n    \"visual_hierarchy\": [\r\n      \"中心人物最突出\",\r\n      \"拆解信息次级\",\r\n      \"注释为辅助层\"\r\n    ],\r\n    \"color_management\": [\r\n      \"整体色调统一\",\r\n      \"局部重点区域可强化色彩\",\r\n      \"避免杂乱\"\r\n    ],\r\n    \"detail_density\": [\r\n      \"信息丰富但分区清晰\",\r\n      \"避免信息堆叠\",\r\n      \"保持专业展示感\"\r\n    ]\r\n  },\r\n\r\n  \"output\": {\r\n    \"format\": \"横向或接近16:9比例\",\r\n    \"resolution\": \"适合高清展示与印刷\",\r\n    \"usage\": [\r\n      \"游戏角色设定\",\r\n      \"视觉开发文档\",\r\n      \"作品集展示\",\r\n      \"软件生成模块输入\"\r\n    ]\r\n  }\r\n}",
+      "promptJsonName": "提示词(JSON).txt",
+      "updatedAt": "2026-04-18T10:50:20.692Z"
+    },
+    {
+      "id": "collection-02",
+      "slug": "collection-02",
+      "folderName": "三视图",
+      "title": "三视图",
+      "headline": "东方古典温柔甜美古风汉服美人",
+      "description": "围绕 超写实真人摄影写真 构建的多视图提示词，强调 专业古风人像摄影、多视图扩展排版 和 温柔甜美 / 清新治愈 / 灵动可爱。",
+      "highlights": [
+        "超写实真人摄影写真",
+        "专业古风人像摄影",
+        "多视图扩展排版",
+        "16:9"
+      ],
+      "metrics": [
+        {
+          "label": "样例图片",
+          "value": "3 张"
+        },
+        {
+          "label": "输出比例",
+          "value": "16:9"
+        },
+        {
+          "label": "结构模块",
+          "value": "11 项"
+        }
+      ],
+      "coverImage": "/prompt-assets/collection-02/%E4%B8%8D%E7%9F%A5%E7%81%AB%E8%88%9E.png",
+      "images": [
+        {
+          "name": "不知火舞.png",
+          "url": "/prompt-assets/collection-02/%E4%B8%8D%E7%9F%A5%E7%81%AB%E8%88%9E.png"
+        },
+        {
+          "name": "仙金系列公主.png",
+          "url": "/prompt-assets/collection-02/%E4%BB%99%E9%87%91%E7%B3%BB%E5%88%97%E5%85%AC%E4%B8%BB.png"
+        },
+        {
+          "name": "暗黑系古风美女.png",
+          "url": "/prompt-assets/collection-02/%E6%9A%97%E9%BB%91%E7%B3%BB%E5%8F%A4%E9%A3%8E%E7%BE%8E%E5%A5%B3.png"
+        }
+      ],
+      "imageCount": 3,
+      "promptText": "超写实真人摄影写真，8K超清，极致细节，照片级 真实质感，专业古风人像摄影，85mm f1.4大光圈 镜头，浅景深，焦点精准锁在人物面部，东方古典 冷艳古风汉服美人，1位年轻亚洲女性， 瓜子脸，冷白皮，皮肤细腻通透有自然原生质感， 冷调烟熏感古风妆容，灰调大地色眼影，眼下点缀 细碎水钻亮片，灰调清冷通透瞳色，精致杏眼，双 眼皮，眼神冷冽疏离又带着魅惑，鼻梁高挺精致， 唇形饱满，唇色为暗调酒红色，表情清冷平静，乌 黑浓密的顺直长发，精致古风半盘发造型，发丝根 根分明，有自然蓬松感，额前与脸颊有飘逸的细碎 胎毛碎发，发丝带细闪珠光质感， 发饰，银质金属雕花发冠，镶嵌大量白水晶、珍 珠、水钻，两侧垂挂长款珍珠水钻流苏步摇，配套 银质水滴珍珠流苏耳坠，漂亮系露肩古风汉服，主色调为仙金色，搭配银色金属镶边，衣身有大面积 银色缠枝暗纹刺绣，镶嵌大量水钻、珍珠、银饰雕 花，面料为哑光高级丝绸+薄透纱质，面料有柔和 高级的光泽感，衣缘袖口有精致钉珠与金属装饰， 露肩设计凸显肩颈线条，纯灰色暗调背景，突出人 物主体，电影级伦勃朗光，侧逆光轮廓光，柔和柔 光打亮面部，明暗对比强烈，画面有细碎星光闪片 氛围感，光影柔和细腻，完美呈现皮肤与面料的通 透质感，整体氛围冷艳惊艳，清冷禁欲，仙气十 足，人物四视图排版，画面左侧为人物上半身特 写，画面右侧并列展示人物全身正面、全身侧面、 全身背面三个视图，整体画面比例16:9",
+      "promptTextName": "提示词.txt",
+      "promptJson": {
+        "image_type": "超写实真人摄影写真",
+        "quality": {
+          "resolution": "8K超清",
+          "detail_level": "极致细节",
+          "style": "照片级真实质感"
+        },
+        "photography": {
+          "type": "专业古风人像摄影",
+          "lens": "85mm f1.4大光圈",
+          "depth_of_field": "浅景深",
+          "focus": "焦点精准锁在人物面部"
+        },
+        "subject": {
+          "count": 1,
+          "ethnicity": "亚洲女性",
+          "age": "年轻",
+          "style": "东方古典温柔甜美古风汉服美人",
+          "face": {
+            "shape": "瓜子脸",
+            "skin": "冷白皮，细腻通透，自然原生质感",
+            "eyes": {
+              "type": "杏眼",
+              "double_eyelid": true,
+              "color": "柔和清透瞳色",
+              "expression": "温柔灵动，带着轻微羞涩与甜美笑意"
+            },
+            "makeup": {
+              "style": "柔和甜美古风妆容",
+              "eyeshadow": "浅粉调大地色",
+              "decoration": "眼下点缀细碎水钻亮片",
+              "lip_color": "温柔豆沙粉或樱桃粉"
+            },
+            "nose": "高挺精致",
+            "lips": "饱满",
+            "expression": "温柔微笑，神情亲和柔软"
+          }
+        },
+        "hair": {
+          "color": "乌黑",
+          "type": "浓密顺直长发",
+          "style": "精致古风半盘发",
+          "details": [
+            "发丝根根分明",
+            "自然蓬松感",
+            "额前与脸颊有细碎胎毛碎发",
+            "发丝带细闪珠光质感"
+          ]
+        },
+        "accessories": {
+          "headwear": {
+            "type": "银质金属雕花发冠",
+            "decorations": [
+              "白水晶",
+              "珍珠",
+              "水钻"
+            ],
+            "details": "两侧垂挂长款珍珠水钻流苏步摇"
+          },
+          "earrings": {
+            "type": "银质水滴珍珠流苏耳坠"
+          }
+        },
+        "clothing": {
+          "type": "露肩古风汉服",
+          "style": "漂亮系",
+          "color_scheme": {
+            "primary": "仙金色",
+            "secondary": "银色金属镶边"
+          },
+          "patterns": "大面积银色缠枝暗纹刺绣",
+          "decorations": [
+            "水钻",
+            "珍珠",
+            "银饰雕花",
+            "衣缘袖口钉珠与金属装饰"
+          ],
+          "materials": [
+            "哑光高级丝绸",
+            "薄透纱质"
+          ],
+          "fabric_texture": "柔和高级光泽感",
+          "design": "露肩设计凸显肩颈线条"
+        },
+        "background": {
+          "color": "纯灰色暗调",
+          "purpose": "突出人物主体"
+        },
+        "lighting": {
+          "style": "电影级伦勃朗光",
+          "setup": [
+            "侧逆光轮廓光",
+            "柔和柔光打亮面部"
+          ],
+          "contrast": "明暗对比柔和",
+          "quality": "光影柔和细腻，带轻微梦幻氛围"
+        },
+        "atmosphere": {
+          "effects": "细碎星光闪片氛围感",
+          "mood": [
+            "温柔甜美",
+            "清新治愈",
+            "灵动可爱",
+            "仙气十足"
+          ],
+          "render_focus": "完美呈现皮肤与面料的通透质感"
+        },
+        "composition": {
+          "layout": "多视图扩展排版",
+          "left": "人物上半身特写（主视觉，高精度细节呈现）",
+          "right": {
+            "grid": "3列 × 3行，共9张图",
+            "top_row": [
+              "全身正面",
+              "全身侧面",
+              "全身背面"
+            ],
+            "bottom_rows": [
+              {
+                "type": "上半身表情特写",
+                "expressions": [
+                  "喜：开心明亮的笑容，眼睛弯起，嘴角上扬，充满阳光与治愈感",
+                  "怒：轻微皱眉，眼神坚定略带不满，嘴唇微抿但保持美感",
+                  "哀：眼神柔弱略带湿润感，表情安静忧伤，嘴角轻微下垂"
+                ]
+              },
+              {
+                "type": "上半身表情特写",
+                "expressions": [
+                  "乐：轻快俏皮的笑容，略带活泼气息，眼神灵动闪亮",
+                  "羞：微微低头，眼神躲闪，脸部带轻微羞涩红润感",
+                  "惊：微微睁大双眼，表情柔和惊讶，嘴唇微张"
+                ]
+              }
+            ],
+            "style_requirements": [
+              "所有子图保持统一光影与色调风格",
+              "面部细节清晰一致",
+              "服装与发饰保持一致",
+              "构图均衡整齐，视觉统一",
+              "表情变化清晰可辨且自然真实"
+            ]
+          },
+          "aspect_ratio": "16:9"
+        }
+      },
+      "promptJsonRaw": "{\r\n  \"image_type\": \"超写实真人摄影写真\",\r\n  \"quality\": {\r\n    \"resolution\": \"8K超清\",\r\n    \"detail_level\": \"极致细节\",\r\n    \"style\": \"照片级真实质感\"\r\n  },\r\n  \"photography\": {\r\n    \"type\": \"专业古风人像摄影\",\r\n    \"lens\": \"85mm f1.4大光圈\",\r\n    \"depth_of_field\": \"浅景深\",\r\n    \"focus\": \"焦点精准锁在人物面部\"\r\n  },\r\n  \"subject\": {\r\n    \"count\": 1,\r\n    \"ethnicity\": \"亚洲女性\",\r\n    \"age\": \"年轻\",\r\n    \"style\": \"东方古典温柔甜美古风汉服美人\",\r\n    \"face\": {\r\n      \"shape\": \"瓜子脸\",\r\n      \"skin\": \"冷白皮，细腻通透，自然原生质感\",\r\n      \"eyes\": {\r\n        \"type\": \"杏眼\",\r\n        \"double_eyelid\": true,\r\n        \"color\": \"柔和清透瞳色\",\r\n        \"expression\": \"温柔灵动，带着轻微羞涩与甜美笑意\"\r\n      },\r\n      \"makeup\": {\r\n        \"style\": \"柔和甜美古风妆容\",\r\n        \"eyeshadow\": \"浅粉调大地色\",\r\n        \"decoration\": \"眼下点缀细碎水钻亮片\",\r\n        \"lip_color\": \"温柔豆沙粉或樱桃粉\"\r\n      },\r\n      \"nose\": \"高挺精致\",\r\n      \"lips\": \"饱满\",\r\n      \"expression\": \"温柔微笑，神情亲和柔软\"\r\n    }\r\n  },\r\n  \"hair\": {\r\n    \"color\": \"乌黑\",\r\n    \"type\": \"浓密顺直长发\",\r\n    \"style\": \"精致古风半盘发\",\r\n    \"details\": [\r\n      \"发丝根根分明\",\r\n      \"自然蓬松感\",\r\n      \"额前与脸颊有细碎胎毛碎发\",\r\n      \"发丝带细闪珠光质感\"\r\n    ]\r\n  },\r\n  \"accessories\": {\r\n    \"headwear\": {\r\n      \"type\": \"银质金属雕花发冠\",\r\n      \"decorations\": [\"白水晶\", \"珍珠\", \"水钻\"],\r\n      \"details\": \"两侧垂挂长款珍珠水钻流苏步摇\"\r\n    },\r\n    \"earrings\": {\r\n      \"type\": \"银质水滴珍珠流苏耳坠\"\r\n    }\r\n  },\r\n  \"clothing\": {\r\n    \"type\": \"露肩古风汉服\",\r\n    \"style\": \"漂亮系\",\r\n    \"color_scheme\": {\r\n      \"primary\": \"仙金色\",\r\n      \"secondary\": \"银色金属镶边\"\r\n    },\r\n    \"patterns\": \"大面积银色缠枝暗纹刺绣\",\r\n    \"decorations\": [\r\n      \"水钻\",\r\n      \"珍珠\",\r\n      \"银饰雕花\",\r\n      \"衣缘袖口钉珠与金属装饰\"\r\n    ],\r\n    \"materials\": [\r\n      \"哑光高级丝绸\",\r\n      \"薄透纱质\"\r\n    ],\r\n    \"fabric_texture\": \"柔和高级光泽感\",\r\n    \"design\": \"露肩设计凸显肩颈线条\"\r\n  },\r\n  \"background\": {\r\n    \"color\": \"纯灰色暗调\",\r\n    \"purpose\": \"突出人物主体\"\r\n  },\r\n  \"lighting\": {\r\n    \"style\": \"电影级伦勃朗光\",\r\n    \"setup\": [\r\n      \"侧逆光轮廓光\",\r\n      \"柔和柔光打亮面部\"\r\n    ],\r\n    \"contrast\": \"明暗对比柔和\",\r\n    \"quality\": \"光影柔和细腻，带轻微梦幻氛围\"\r\n  },\r\n  \"atmosphere\": {\r\n    \"effects\": \"细碎星光闪片氛围感\",\r\n    \"mood\": [\r\n      \"温柔甜美\",\r\n      \"清新治愈\",\r\n      \"灵动可爱\",\r\n      \"仙气十足\"\r\n    ],\r\n    \"render_focus\": \"完美呈现皮肤与面料的通透质感\"\r\n  },\r\n  \"composition\": {\r\n    \"layout\": \"多视图扩展排版\",\r\n    \"left\": \"人物上半身特写（主视觉，高精度细节呈现）\",\r\n    \"right\": {\r\n      \"grid\": \"3列 × 3行，共9张图\",\r\n      \"top_row\": [\r\n        \"全身正面\",\r\n        \"全身侧面\",\r\n        \"全身背面\"\r\n      ],\r\n      \"bottom_rows\": [\r\n        {\r\n          \"type\": \"上半身表情特写\",\r\n          \"expressions\": [\r\n            \"喜：开心明亮的笑容，眼睛弯起，嘴角上扬，充满阳光与治愈感\",\r\n            \"怒：轻微皱眉，眼神坚定略带不满，嘴唇微抿但保持美感\",\r\n            \"哀：眼神柔弱略带湿润感，表情安静忧伤，嘴角轻微下垂\"\r\n          ]\r\n        },\r\n        {\r\n          \"type\": \"上半身表情特写\",\r\n          \"expressions\": [\r\n            \"乐：轻快俏皮的笑容，略带活泼气息，眼神灵动闪亮\",\r\n            \"羞：微微低头，眼神躲闪，脸部带轻微羞涩红润感\",\r\n            \"惊：微微睁大双眼，表情柔和惊讶，嘴唇微张\"\r\n          ]\r\n        }\r\n      ],\r\n      \"style_requirements\": [\r\n        \"所有子图保持统一光影与色调风格\",\r\n        \"面部细节清晰一致\",\r\n        \"服装与发饰保持一致\",\r\n        \"构图均衡整齐，视觉统一\",\r\n        \"表情变化清晰可辨且自然真实\"\r\n      ]\r\n    },\r\n    \"aspect_ratio\": \"16:9\"\r\n  }\r\n}",
+      "promptJsonName": "提示词（JSON）.txt",
+      "updatedAt": "2026-04-18T10:50:20.706Z"
+    }
+  ]
+}

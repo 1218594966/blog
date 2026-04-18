@@ -17,6 +17,7 @@ const ADMIN_LOGIN_PATH = path.join(PUBLIC_DIR, "admin-login.html");
 const DEFAULT_CONTENT_PATH = path.join(__dirname, "content", "site-content.json");
 const DEFAULT_MESSAGES_PATH = path.join(__dirname, "content", "messages.json");
 const DEFAULT_AI_CONFIG_PATH = path.join(__dirname, "content", "ai-config.json");
+const PROMPT_GALLERY_PATH = path.join(__dirname, "content", "prompt-gallery.json");
 const STORAGE_DIR = path.join(ROOT_DIR, "storage");
 const CONTENT_PATH = path.join(STORAGE_DIR, "site-content.json");
 const MESSAGES_PATH = path.join(STORAGE_DIR, "messages.json");
@@ -346,8 +347,6 @@ function validateContentShape(data) {
     "stats",
     "about",
     "projects",
-    "experience",
-    "blog",
     "testimonials",
     "contact",
     "footer"
@@ -562,6 +561,18 @@ app.get("/api/content", (_req, res) => {
     res.json(readJson(CONTENT_PATH, {}, DEFAULT_CONTENT_PATH));
   } catch (error) {
     res.status(500).json({ error: "读取内容失败", detail: error.message });
+  }
+});
+
+app.get("/api/prompt-gallery", (_req, res) => {
+  try {
+    res.json(readJson(PROMPT_GALLERY_PATH, {
+      generatedAt: "",
+      collectionCount: 0,
+      collections: []
+    }));
+  } catch (error) {
+    res.status(500).json({ error: "读取提示词展廊失败", detail: error.message });
   }
 });
 

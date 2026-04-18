@@ -8,6 +8,8 @@ let testimonialOffset = 0;
 let testimonialAutoScroll = null;
 let aiPublicConfig = null;
 let aiConversation = [];
+let promptGallery = null;
+let promptCarouselIntervals = [];
 
 const els = {
   scrollProgress: document.getElementById("scrollProgress"),
@@ -36,8 +38,8 @@ const els = {
   skillsGrid: document.getElementById("skillsGrid"),
   projectFilters: document.getElementById("projectFilters"),
   projectsGrid: document.getElementById("projectsGrid"),
-  experienceTimeline: document.getElementById("experienceTimeline"),
-  blogGrid: document.getElementById("blogGrid"),
+  promptGallerySection: document.getElementById("prompt-gallery"),
+  promptCollections: document.getElementById("promptCollections"),
   aiLabSection: document.getElementById("ai-lab"),
   aiSectionTitle: document.getElementById("aiSectionTitle"),
   aiSectionDescription: document.getElementById("aiSectionDescription"),
@@ -117,14 +119,38 @@ function repeatItems(items) {
   return [...items, ...items];
 }
 
-function formatDate(date) {
-  const parsed = new Date(date);
-  if (Number.isNaN(parsed.getTime())) return date;
-  return parsed.toLocaleDateString("zh-CN", {
-    year: "numeric",
-    month: "long",
-    day: "numeric"
+function stripExtension(fileName) {
+  return String(fileName ?? "").replace(/\.[^.]+$/, "");
+}
+
+function getPromptImages(collection) {
+  return Array.isArray(collection?.images) ? collection.images.filter(Boolean) : [];
+}
+
+function getDefaultPromptImageIndex(collection) {
+  const images = getPromptImages(collection);
+  if (!images.length) return 0;
+
+  const highlightedIndex = images.findIndex((image) => /仙金系列公主/i.test(image.name || ""));
+  if (highlightedIndex >= 0) return highlightedIndex;
+
+  const coverIndex = images.findIndex((image) => image.url === collection?.coverImage);
+  return coverIndex >= 0 ? coverIndex : 0;
+}
+
+function getPrimaryPromptImage(collection) {
+  const images = getPromptImages(collection);
+  if (!images.length) return collection?.coverImage || "";
+  return images[getDefaultPromptImageIndex(collection)]?.url || collection?.coverImage || "";
+}
+
+function clearPromptCarouselIntervals() {
+  promptCarouselIntervals.forEach((stopTimer) => {
+    if (typeof stopTimer === "function") {
+      stopTimer();
+    }
   });
+  promptCarouselIntervals = [];
 }
 
 function setAiStatus(message, isError = false) {
@@ -133,28 +159,59 @@ function setAiStatus(message, isError = false) {
   els.aiStatusText.style.color = isError ? "#f6b8b8" : "";
 }
 
-function openModal(title, category, detail, tags, visual) {
+function showModalContent({ coverMarkup = "", category = "", title = "", bodyMarkup = "", tags = [] }) {
   if (!els.modalBody || !els.modalOverlay) return;
 
+  const safeCategory = escapeHtml(category);
+  const safeTitle = escapeHtml(title);
+  const safeTags = Array.isArray(tags) && tags.length
+    ? tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")
+    : "";
+
+  els.modalBody.innerHTML = `
+    ${coverMarkup}
+    <div class="project-category modal-category">${safeCategory}</div>
+    <h2>${safeTitle}</h2>
+    <div class="modal-body-copy">${bodyMarkup}</div>
+    ${safeTags ? `<div class="project-tags modal-tags">${safeTags}</div>` : ""}
+  `;
+  els.modalOverlay.classList.add("active");
+}
+
+function openModal(title, category, detail, tags, visual) {
   const detailMarkup = Array.isArray(detail)
     ? detail.map((item) => `<p>${escapeHtml(item)}</p>`).join("")
     : `<p>${escapeHtml(detail)}</p>`;
   const background = safeBackground(visual?.color);
   const emoji = escapeHtml(visual?.emoji || "");
-  const safeCategory = escapeHtml(category);
-  const safeTitle = escapeHtml(title);
-  const safeTags = Array.isArray(tags)
-    ? tags.map((tag) => `<span>${escapeHtml(tag)}</span>`).join("")
-    : "";
 
-  els.modalBody.innerHTML = `
-    <div style="width:100%;height:180px;border-radius:12px;background:${background};display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:24px">${emoji}</div>
-    <div class="project-category" style="margin-bottom:8px">${safeCategory}</div>
-    <h2>${safeTitle}</h2>
-    <div style="display:grid;gap:14px;margin-top:18px">${detailMarkup}</div>
-    <div class="project-tags" style="margin-top:20px">${safeTags}</div>
-  `;
-  els.modalOverlay.classList.add("active");
+  showModalContent({
+    coverMarkup: `<div class="modal-visual" style="background:${background}">${emoji}</div>`,
+    category,
+    title,
+    bodyMarkup: `<div class="modal-copy-stack">${detailMarkup}</div>`,
+    tags
+  });
+}
+
+function openPromptJsonModal(collection, activeImage = null) {
+  const jsonContent = collection?.promptJsonRaw || "";
+  if (!jsonContent) return;
+  const modalImage = activeImage?.url || getPrimaryPromptImage(collection);
+
+  showModalContent({
+    coverMarkup: modalImage
+      ? `<img class="modal-cover-image" src="${modalImage}" alt="${escapeHtml(collection.headline || collection.title)}">`
+      : "",
+    category: `${collection.folderName} · ${activeImage?.name ? stripExtension(activeImage.name) : "JSON 结构"}`,
+    title: collection.headline || collection.title,
+    bodyMarkup: `
+      <p class="prompt-modal-description">${escapeHtml(collection.description || "")}</p>
+      <div class="prompt-code-heading">${escapeHtml(collection.promptJsonName || "JSON 提示词")}</div>
+      <pre class="prompt-code-block">${escapeHtml(jsonContent)}</pre>
+    `,
+    tags: collection.highlights || []
+  });
 }
 
 function observeReveals() {
@@ -165,14 +222,35 @@ function renderNavigation() {
   if (!els.navLinks) return;
   els.navLinks.innerHTML = "";
 
-  siteContent.navigation.forEach((item) => {
+  const navigationItems = [...siteContent.navigation];
+
+  if (promptGallery?.collections?.length) {
+    navigationItems.splice(Math.min(3, navigationItems.length), 0, {
+      label: "提示词展廊",
+      href: "#prompt-gallery"
+    });
+  }
+
+  navigationItems.push(
+    { label: "工具中心", href: "/tools" },
+    { label: "项目中心", href: "/projects" },
+    { label: "实验区", href: "/lab" }
+  );
+
+  navigationItems
+    .filter((item) => {
+      if (!item?.href) return false;
+      if (!item.href.startsWith("#")) return true;
+      return Boolean(document.querySelector(item.href));
+    })
+    .forEach((item) => {
     const li = document.createElement("li");
     const link = document.createElement("a");
     link.href = item.href;
     link.textContent = item.label;
     li.appendChild(link);
     els.navLinks.appendChild(li);
-  });
+    });
 }
 
 function renderHero() {
@@ -221,10 +299,18 @@ function renderStats() {
 function renderMarquee() {
   if (!els.marqueeTrack) return;
 
+  const heroTags = Array.isArray(siteContent?.hero?.tags) ? siteContent.hero.tags : [];
+  const projectCategories = Array.isArray(siteContent?.projects)
+    ? siteContent.projects.map((project) => project?.category)
+    : [];
+  const promptHighlights = Array.isArray(promptGallery?.collections)
+    ? promptGallery.collections.flatMap((collection) => collection?.highlights || [])
+    : [];
+
   const items = repeatItems([
-    ...siteContent.hero.tags,
-    ...siteContent.projects.map((project) => project.category),
-    ...siteContent.blog.map((post) => post.tag)
+    ...heroTags,
+    ...projectCategories,
+    ...promptHighlights
   ].filter(Boolean));
 
   els.marqueeTrack.innerHTML = "";
@@ -366,56 +452,204 @@ function renderProjects() {
   observeReveals();
 }
 
-function renderExperience() {
-  if (!els.experienceTimeline) return;
-  els.experienceTimeline.innerHTML = "";
+function renderPromptGallery() {
+  if (!els.promptGallerySection || !els.promptCollections) return;
 
-  siteContent.experience.forEach((item, index) => {
-    const experience = createElement("div", `timeline-item reveal stagger-${Math.min(index + 1, 4)}`);
-    experience.innerHTML = `
-      <div class="timeline-year">${escapeHtml(item.year)}</div>
-      <div class="timeline-role">${escapeHtml(item.role)}</div>
-      <div class="timeline-company">${escapeHtml(item.company)}</div>
-      <div class="timeline-desc">${escapeHtml(item.desc)}</div>
-    `;
-    els.experienceTimeline.appendChild(experience);
-  });
-}
+  clearPromptCarouselIntervals();
 
-function renderBlog() {
-  if (!els.blogGrid) return;
-  els.blogGrid.innerHTML = "";
+  const collections = Array.isArray(promptGallery?.collections)
+    ? [...promptGallery.collections].sort((left, right) => {
+      const leftPriority = left.folderName?.includes("三视图") ? 0 : 1;
+      const rightPriority = right.folderName?.includes("三视图") ? 0 : 1;
+      if (leftPriority !== rightPriority) {
+        return leftPriority - rightPriority;
+      }
+      return 0;
+    })
+    : [];
 
-  siteContent.blog.forEach((post, index) => {
-    const card = createElement("article", "blog-card reveal");
-    card.style.transitionDelay = `${index * 0.08}s`;
-    card.innerHTML = `
-      <div class="blog-card-image">
-        <div class="blog-card-image-bg" style="background:${safeBackground(post.color)}">${escapeHtml(post.emoji)}</div>
-        <div class="blog-card-image-overlay"></div>
-      </div>
-      <div class="blog-card-body">
-        <div class="blog-meta">
-          <span>${escapeHtml(formatDate(post.date))}</span>
-          <span>${escapeHtml(post.tag)}</span>
+  if (!collections.length) {
+    els.promptGallerySection.style.display = "none";
+    return;
+  }
+
+  els.promptGallerySection.style.display = "";
+  els.promptCollections.innerHTML = "";
+  const galleryItems = collections.flatMap((collection) => getPromptImages(collection).map((image, index) => ({
+    collection,
+    image,
+    imageIndex: index,
+    readableName: stripExtension(image.name),
+    jsonRaw: collection.promptJsonRaw || JSON.stringify(collection.promptJson || {}, null, 2)
+  })));
+
+  if (!galleryItems.length) {
+    els.promptGallerySection.style.display = "none";
+    return;
+  }
+
+  const highlightedIndex = galleryItems.findIndex((item) => /仙金系列公主/i.test(item.image.name || ""));
+  const initialIndex = highlightedIndex >= 0 ? highlightedIndex : 0;
+  const gallery = createElement("section", "prompt-unified-gallery reveal");
+
+  gallery.innerHTML = `
+    <div class="prompt-flow-layout">
+      <div class="prompt-flow-left">
+        <div class="prompt-flow-window">
+          <div class="prompt-flow-track" data-prompt-track>
+            ${galleryItems.map((item) => `
+              <button type="button" class="prompt-flow-slide" data-prompt-slide="${item.collection.slug}">
+                <img src="${item.image.url}" alt="${escapeHtml(item.readableName)}" loading="lazy">
+              </button>
+            `).join("")}
+          </div>
         </div>
-        <div class="blog-card-title">${escapeHtml(post.title)}</div>
-        <div class="blog-card-excerpt">${escapeHtml(post.excerpt)}</div>
-        <a href="#" class="blog-read-more">阅读全文 →</a>
+        <div class="prompt-stage-toolbar">
+          <div>
+            <div class="prompt-panel-label">自动图像流廊</div>
+            <div class="prompt-stage-status" data-prompt-status></div>
+          </div>
+          <div class="prompt-stage-actions">
+            <button type="button" class="prompt-stage-nav" data-prompt-nav="-1" aria-label="上一张">←</button>
+            <button type="button" class="prompt-stage-nav" data-prompt-nav="1" aria-label="下一张">→</button>
+          </div>
+        </div>
+        <div class="prompt-stage-progress"><span data-prompt-progress></span></div>
+        <div class="prompt-thumb-rail" data-prompt-rail>
+          ${galleryItems.map((item, index) => `
+            <button type="button" class="prompt-thumb" data-prompt-thumb="${index}" aria-label="切换到 ${escapeHtml(item.readableName)}">
+              <img src="${item.image.url}" alt="${escapeHtml(item.readableName)}" loading="lazy">
+              <span>${escapeHtml(item.readableName)}</span>
+            </button>
+          `).join("")}
+        </div>
       </div>
-    `;
+      <div class="prompt-flow-right">
+        <div class="prompt-json-panel" data-json-panel>
+          <div class="prompt-json-head">
+            <div>
+              <div class="prompt-panel-label">JSON 结构</div>
+              <div class="prompt-json-status" data-prompt-json-status></div>
+            </div>
+            <button type="button" class="prompt-panel-action" data-prompt-action="json">全屏查看</button>
+          </div>
+          <pre class="prompt-code-block" data-prompt-code></pre>
+        </div>
+      </div>
+    </div>
+  `;
 
-    const link = card.querySelector(".blog-read-more");
-    link?.addEventListener("click", (event) => {
-      event.preventDefault();
-      openModal(post.title, post.tag, post.detail, [post.tag, formatDate(post.date)], {
-        color: post.color,
-        emoji: post.emoji
-      });
+  const track = gallery.querySelector("[data-prompt-track]");
+  const thumbs = Array.from(gallery.querySelectorAll("[data-prompt-thumb]"));
+  const status = gallery.querySelector("[data-prompt-status]");
+  const jsonStatus = gallery.querySelector("[data-prompt-json-status]");
+  const progressBar = gallery.querySelector("[data-prompt-progress]");
+  const codeBlock = gallery.querySelector("[data-prompt-code]");
+  const jsonPanel = gallery.querySelector("[data-json-panel]");
+  const thumbRail = gallery.querySelector("[data-prompt-rail]");
+  let activeIndex = initialIndex;
+
+  function applyActiveItem(nextIndex) {
+    if (!galleryItems.length || !track || !codeBlock) return;
+    activeIndex = (nextIndex + galleryItems.length) % galleryItems.length;
+
+    const activeItem = galleryItems[activeIndex];
+    const activeCollection = activeItem.collection;
+    track.style.transform = `translateX(-${activeIndex * 100}%)`;
+
+    thumbs.forEach((thumb, thumbIndex) => {
+      thumb.classList.toggle("active", thumbIndex === activeIndex);
+      if (thumbIndex === activeIndex) {
+        thumb.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      }
     });
 
-    els.blogGrid.appendChild(card);
+    if (status) {
+      status.textContent = `${activeIndex + 1} / ${galleryItems.length} · ${activeItem.readableName}`;
+    }
+
+    if (jsonStatus) {
+      jsonStatus.textContent = `${activeCollection.folderName} · ${activeCollection.headline || activeCollection.title}`;
+    }
+
+    if (progressBar) {
+      progressBar.style.width = `${((activeIndex + 1) / galleryItems.length) * 100}%`;
+    }
+
+    if (jsonPanel) {
+      jsonPanel.style.setProperty("--prompt-shift", `${activeIndex}`);
+    }
+
+    codeBlock.textContent = activeItem.jsonRaw || "暂无 JSON 提示词。";
+    codeBlock.classList.remove("is-animating");
+    void codeBlock.offsetWidth;
+    codeBlock.classList.add("is-animating");
+  }
+
+  thumbs.forEach((thumbButton) => {
+    thumbButton.addEventListener("click", () => {
+      const thumbIndex = Number(thumbButton.getAttribute("data-prompt-thumb"));
+      applyActiveItem(Number.isFinite(thumbIndex) ? thumbIndex : 0);
+    });
   });
+
+  gallery.querySelectorAll("[data-prompt-nav]").forEach((navButton) => {
+    navButton.addEventListener("click", () => {
+      const direction = Number(navButton.getAttribute("data-prompt-nav"));
+      applyActiveItem(activeIndex + (Number.isFinite(direction) ? direction : 1));
+    });
+  });
+
+  gallery.querySelector("[data-prompt-action='json']")?.addEventListener("click", () => {
+    const activeItem = galleryItems[activeIndex];
+    openPromptJsonModal(activeItem.collection, activeItem.image);
+  });
+
+  gallery.querySelectorAll("[data-prompt-slide]").forEach((slideButton, slideIndex) => {
+    slideButton.addEventListener("click", () => {
+      const activeItem = galleryItems[slideIndex];
+      showModalContent({
+        coverMarkup: `<img class="modal-cover-image" src="${activeItem.image.url}" alt="${escapeHtml(activeItem.readableName)}">`,
+        category: `${activeItem.collection.folderName} · 样例图`,
+        title: activeItem.readableName,
+        bodyMarkup: `<p class="prompt-modal-description">${escapeHtml(activeItem.collection.description || "")}</p>`,
+        tags: activeItem.collection.highlights || []
+      });
+    });
+  });
+
+  applyActiveItem(initialIndex);
+
+  if (galleryItems.length > 1) {
+    let timerId = window.setInterval(() => {
+      applyActiveItem(activeIndex + 1);
+    }, 3200);
+
+    const resumeAutoplay = () => {
+      window.clearInterval(timerId);
+      timerId = window.setInterval(() => {
+        applyActiveItem(activeIndex + 1);
+      }, 3200);
+    };
+
+    gallery.addEventListener("mouseenter", () => {
+      window.clearInterval(timerId);
+    });
+
+    gallery.addEventListener("mouseleave", () => {
+      resumeAutoplay();
+    });
+
+    thumbRail?.addEventListener("wheel", (event) => {
+      if (Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+      event.preventDefault();
+      thumbRail.scrollLeft += event.deltaY;
+    }, { passive: false });
+
+    promptCarouselIntervals.push(() => window.clearInterval(timerId));
+  }
+
+  els.promptCollections.appendChild(gallery);
 
   observeReveals();
 }
@@ -443,43 +677,6 @@ function renderTestimonials() {
 }
 
 function renderContact() {
-  if (els.contactHeading) els.contactHeading.textContent = siteContent.contact.heading;
-  if (els.contactDescription) els.contactDescription.textContent = siteContent.contact.description;
-
-  if (els.contactDetails) {
-    const items = [
-      { icon: "邮", label: "邮箱", value: siteContent.contact.email },
-      { icon: "电", label: "电话", value: siteContent.contact.phone },
-      { icon: "位", label: "地址", value: siteContent.contact.location }
-    ];
-
-    els.contactDetails.innerHTML = "";
-    items.forEach((item) => {
-      const row = createElement("div", "contact-detail-item");
-      row.innerHTML = `
-        <div class="contact-detail-icon">${escapeHtml(item.icon)}</div>
-        <span>${escapeHtml(item.label)}：${escapeHtml(item.value)}</span>
-        <button class="contact-detail-copy" type="button" data-copy="${escapeHtml(item.value)}">复制</button>
-      `;
-      els.contactDetails.appendChild(row);
-    });
-  }
-
-  if (els.socialLinks) {
-    els.socialLinks.innerHTML = "";
-    siteContent.contact.socials.forEach((item) => {
-      const link = createElement("a", "social-link", item.short);
-      link.href = item.href;
-      link.title = item.label;
-      link.setAttribute("aria-label", item.label);
-      link.target = item.href.startsWith("http") ? "_blank" : "_self";
-      link.rel = item.href.startsWith("http") ? "noreferrer" : "";
-      els.socialLinks.appendChild(link);
-    });
-  }
-}
-
-function renderContactSafe() {
   if (els.contactHeading) els.contactHeading.textContent = siteContent.contact.heading;
   if (els.contactDescription) els.contactDescription.textContent = siteContent.contact.description;
 
@@ -648,10 +845,9 @@ function renderAll() {
   renderAbout();
   renderProjectFilters();
   renderProjects();
-  renderExperience();
-  renderBlog();
+  renderPromptGallery();
   renderTestimonials();
-  renderContactSafe();
+  renderContact();
   renderFooter();
 }
 
@@ -721,14 +917,14 @@ function setupCursor() {
 
   document.addEventListener("mouseover", (event) => {
     const target = event.target instanceof Element ? event.target : null;
-    if (target?.closest("a, button, .project-card, .blog-card, .filter-btn, .social-link")) {
+    if (target?.closest("a, button, .project-card, .filter-btn, .social-link")) {
       els.cursorRing.classList.add("hovering");
     }
   });
 
   document.addEventListener("mouseout", (event) => {
     const target = event.target instanceof Element ? event.target : null;
-    if (target?.closest("a, button, .project-card, .blog-card, .filter-btn, .social-link")) {
+    if (target?.closest("a, button, .project-card, .filter-btn, .social-link")) {
       els.cursorRing.classList.remove("hovering");
     }
   });
@@ -1055,30 +1251,20 @@ function setupForm() {
   });
 }
 
-function setupBlogView() {
-  const buttons = document.querySelectorAll(".view-btn");
-  if (!buttons.length || !els.blogGrid) return;
+async function loadPromptGallery() {
+  try {
+    const response = await fetch("/api/prompt-gallery");
+    if (!response.ok) {
+      throw new Error("提示词展廊加载失败");
+    }
 
-  buttons.forEach((button) => {
-    button.addEventListener("click", () => {
-      buttons.forEach((item) => item.classList.remove("active"));
-      button.classList.add("active");
-
-      if (button.dataset.view === "list") {
-        els.blogGrid.style.gridTemplateColumns = "1fr";
-        els.blogGrid.querySelectorAll(".blog-card").forEach((card) => {
-          card.style.display = "grid";
-          card.style.gridTemplateColumns = "220px 1fr";
-        });
-      } else {
-        els.blogGrid.style.gridTemplateColumns = "";
-        els.blogGrid.querySelectorAll(".blog-card").forEach((card) => {
-          card.style.display = "";
-          card.style.gridTemplateColumns = "";
-        });
-      }
-    });
-  });
+    promptGallery = await response.json();
+    return promptGallery;
+  } catch (error) {
+    console.error(error);
+    promptGallery = null;
+    return null;
+  }
 }
 
 async function loadContent() {
@@ -1161,7 +1347,7 @@ function setupAiLab() {
 
 async function init() {
   try {
-    await Promise.all([loadContent(), loadAiPublicConfig()]);
+    await Promise.all([loadContent(), loadAiPublicConfig(), loadPromptGallery()]);
     renderAll();
     startLoader();
     setupCursor();
@@ -1170,7 +1356,6 @@ async function init() {
     setupModal();
     setupCopyActions();
     setupForm();
-    setupBlogView();
     setupAiLab();
     setupTestimonials();
     observeReveals();

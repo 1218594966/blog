@@ -107,49 +107,9 @@ const repeaterConfigs = {
       { key: "desc", label: "项目简介", type: "textarea", rows: 3 },
       { key: "detail", label: "项目详情", type: "textarea", rows: 5 },
       { key: "tags", label: "项目标签", type: "list" },
-      { key: "emoji", label: "图形符号", type: "text" },
-      { key: "color", label: "渐变背景", type: "text" }
-    ]
-  },
-  experience: {
-    containerId: "experienceEditor",
-    path: "experience",
-    itemTitle: (index) => `经历 ${index + 1}`,
-    createItem: () => ({
-      year: "2026",
-      role: "新的阶段标题",
-      company: "时间或场景",
-      desc: "请填写这一阶段的变化或关注重点"
-    }),
-    fields: [
-      { key: "year", label: "年份", type: "text" },
-      { key: "role", label: "职位", type: "text" },
-      { key: "company", label: "公司或地点", type: "text" },
-      { key: "desc", label: "经历说明", type: "textarea", rows: 4 }
-    ]
-  },
-  blog: {
-    containerId: "blogEditor",
-    path: "blog",
-    itemTitle: (index) => `文章 ${index + 1}`,
-    createItem: () => ({
-      date: "2026-04-10",
-      tag: "文章分类",
-      title: "新文章标题",
-      excerpt: "请填写文章摘要",
-      detail: "请填写文章详情",
-      emoji: "✍",
-      color: "linear-gradient(135deg,#1f1f32,#d4a853)"
-    }),
-    fields: [
-      { key: "date", label: "发布日期", type: "text" },
-      { key: "tag", label: "文章标签", type: "text" },
-      { key: "title", label: "文章标题", type: "text" },
-      { key: "excerpt", label: "文章摘要", type: "textarea", rows: 3 },
-      { key: "detail", label: "文章详情", type: "textarea", rows: 5 },
-      { key: "emoji", label: "图形符号", type: "text" },
-      { key: "color", label: "渐变背景", type: "text" }
-    ]
+        { key: "emoji", label: "图形符号", type: "text" },
+        { key: "color", label: "渐变背景", type: "text" }
+      ]
   },
   testimonials: {
     containerId: "testimonialsEditor",
