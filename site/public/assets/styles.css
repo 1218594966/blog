@@ -499,6 +499,13 @@ button:disabled { opacity: 0.65; cursor: not-allowed; }
   font-size: 13px;
 }
 
+.prompt-json-title {
+  margin-top: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
 .prompt-stage-actions {
   display: flex;
   gap: 8px;

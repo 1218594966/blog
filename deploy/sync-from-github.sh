@@ -14,6 +14,9 @@ fi
 
 cd "${APP_DIR}"
 
+# Avoid a dirty local lockfile blocking fast-forward pulls.
+git restore --source=HEAD --staged --worktree package-lock.json 2>/dev/null || git checkout -- package-lock.json 2>/dev/null || true
+
 git fetch origin "${BRANCH}"
 
 LOCAL_HEAD="$(git rev-parse HEAD)"
@@ -27,7 +30,11 @@ fi
 echo "Updates detected: ${LOCAL_HEAD} -> ${REMOTE_HEAD}"
 
 git pull --ff-only origin "${BRANCH}"
-npm install --omit=dev
+if [ -f package-lock.json ]; then
+  npm ci --omit=dev
+else
+  npm install --omit=dev
+fi
 npm run check
 pm2 startOrReload ecosystem.config.cjs --update-env
 pm2 save

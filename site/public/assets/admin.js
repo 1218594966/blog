@@ -1,5 +1,6 @@
 let contentState = null;
 let aiConfigState = null;
+let promptGalleryAdminState = null;
 let aiModelsDebounce = null;
 
 const fields = {
@@ -34,6 +35,17 @@ const fields = {
   aiPlaceholder: document.getElementById("aiPlaceholder"),
   aiStatus: document.getElementById("aiStatus"),
   refreshAiModelsBtn: document.getElementById("refreshAiModelsBtn"),
+  refreshPromptGalleryBtn: document.getElementById("refreshPromptGalleryBtn"),
+  savePromptGalleryBtn: document.getElementById("savePromptGalleryBtn"),
+  promptGalleryStatus: document.getElementById("promptGalleryStatus"),
+  promptGallerySourceSelect: document.getElementById("promptGallerySourceSelect"),
+  promptGalleryTitle: document.getElementById("promptGalleryTitle"),
+  promptGalleryDisplayGroup: document.getElementById("promptGalleryDisplayGroup"),
+  promptGalleryDescription: document.getElementById("promptGalleryDescription"),
+  promptGalleryFile: document.getElementById("promptGalleryFile"),
+  promptGalleryUploadBtn: document.getElementById("promptGalleryUploadBtn"),
+  promptGalleryBaseList: document.getElementById("promptGalleryBaseList"),
+  promptGalleryCustomList: document.getElementById("promptGalleryCustomList"),
   rawJson: document.getElementById("rawJson"),
   refreshBtn: document.getElementById("refreshBtn"),
   refreshMessagesBtn: document.getElementById("refreshMessagesBtn"),
@@ -192,6 +204,124 @@ function setAiStatus(message, isError = false) {
   if (!fields.aiStatus) return;
   fields.aiStatus.textContent = message || "";
   fields.aiStatus.style.color = isError ? "#f6b8b8" : "";
+}
+
+function setPromptGalleryStatus(message, isError = false) {
+  if (!fields.promptGalleryStatus) return;
+  fields.promptGalleryStatus.textContent = message || "";
+  fields.promptGalleryStatus.style.color = isError ? "#f6b8b8" : "";
+}
+
+function getPromptImages(collection) {
+  return Array.isArray(collection?.images) ? collection.images.filter(Boolean) : [];
+}
+
+function getPromptGalleryConfigState() {
+  if (!promptGalleryAdminState) return null;
+
+  if (!promptGalleryAdminState.config || typeof promptGalleryAdminState.config !== "object") {
+    promptGalleryAdminState.config = {
+      hiddenImageUrls: [],
+      customItems: []
+    };
+  }
+
+  if (!Array.isArray(promptGalleryAdminState.config.hiddenImageUrls)) {
+    promptGalleryAdminState.config.hiddenImageUrls = [];
+  }
+
+  if (!Array.isArray(promptGalleryAdminState.config.customItems)) {
+    promptGalleryAdminState.config.customItems = [];
+  }
+
+  return promptGalleryAdminState.config;
+}
+
+function fillPromptGallerySourceOptions() {
+  if (!fields.promptGallerySourceSelect) return;
+
+  const collections = Array.isArray(promptGalleryAdminState?.baseGallery?.collections)
+    ? promptGalleryAdminState.baseGallery.collections
+    : [];
+
+  fields.promptGallerySourceSelect.innerHTML = collections.map((collection) => {
+    const label = collection.headline || collection.title || collection.folderName || collection.id;
+    return `<option value="${escapeHtml(collection.id)}">${escapeHtml(label)}</option>`;
+  }).join("");
+}
+
+function renderPromptGalleryAdmin() {
+  if (!fields.promptGalleryBaseList || !fields.promptGalleryCustomList) return;
+
+  const config = getPromptGalleryConfigState();
+  const hiddenUrls = new Set(config?.hiddenImageUrls || []);
+  const collections = Array.isArray(promptGalleryAdminState?.baseGallery?.collections)
+    ? promptGalleryAdminState.baseGallery.collections
+    : [];
+
+  fillPromptGallerySourceOptions();
+
+  if (!collections.length) {
+    fields.promptGalleryBaseList.innerHTML = '<div class="empty-state">暂时没有可管理的基础图库。</div>';
+  } else {
+    fields.promptGalleryBaseList.innerHTML = collections.map((collection) => {
+      const title = collection.headline || collection.title || collection.folderName || collection.id;
+      const imagesMarkup = getPromptImages(collection).map((image) => {
+        const visible = !hiddenUrls.has(image.url);
+        return `
+          <label class="prompt-admin-image-card">
+            <input type="checkbox" data-prompt-base-toggle="${escapeHtml(image.url)}" ${visible ? "checked" : ""}>
+            <div class="prompt-admin-image-preview">
+              <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.name || title)}" loading="lazy">
+            </div>
+            <div class="prompt-admin-image-meta">
+              <strong>${escapeHtml(image.name || "未命名图片")}</strong>
+              <span>${visible ? "前台显示中" : "已隐藏"}</span>
+            </div>
+          </label>
+        `;
+      }).join("");
+
+      return `
+        <article class="prompt-admin-collection">
+          <div class="prompt-admin-collection-header">
+            <h4>${escapeHtml(title)}</h4>
+            <span>${getPromptImages(collection).length} 张</span>
+          </div>
+          <div class="prompt-admin-image-grid">
+            ${imagesMarkup || '<div class="empty-state">这一组暂时没有图片。</div>'}
+          </div>
+        </article>
+      `;
+    }).join("");
+  }
+
+  const customItems = Array.isArray(config?.customItems) ? config.customItems : [];
+  if (!customItems.length) {
+    fields.promptGalleryCustomList.innerHTML = '<div class="empty-state">还没有自定义上传图片。</div>';
+    return;
+  }
+
+  const sourceTitleMap = new Map(
+    collections.map((collection) => [collection.id, collection.headline || collection.title || collection.folderName || collection.id])
+  );
+
+  fields.promptGalleryCustomList.innerHTML = customItems.map((item) => `
+    <article class="prompt-admin-upload-card">
+      <div class="prompt-admin-upload-media">
+        <img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(item.title || "自定义上传图片")}" loading="lazy">
+      </div>
+      <div class="prompt-admin-upload-info">
+        <h4>${escapeHtml(item.title || "未命名上传图")}</h4>
+        <p>${escapeHtml(item.description || "未填写补充说明。")}</p>
+        <div class="prompt-admin-upload-tags">
+          <span>${escapeHtml(item.displayGroup || "未分组")}</span>
+          <span>${escapeHtml(sourceTitleMap.get(item.sourceCollectionId) || "未挂载 JSON")}</span>
+        </div>
+      </div>
+      <button type="button" class="repeater-remove" data-prompt-custom-delete="${escapeHtml(item.id)}">删除</button>
+    </article>
+  `).join("");
 }
 
 function renderAiModelOptions(models, selectedModel) {
@@ -465,8 +595,114 @@ async function fetchAiConfig() {
   }
 }
 
+async function fetchPromptGalleryAdmin() {
+  const response = await fetch("/api/prompt-gallery/admin");
+  if (!response.ok) {
+    throw new Error("读取提示词展廊配置失败");
+  }
+
+  promptGalleryAdminState = await response.json();
+  renderPromptGalleryAdmin();
+}
+
 async function refreshAll() {
-  await Promise.all([fetchContent(), fetchMessages(), fetchAiConfig()]);
+  await Promise.all([fetchContent(), fetchMessages(), fetchAiConfig(), fetchPromptGalleryAdmin()]);
+}
+
+async function savePromptGalleryConfig() {
+  const config = getPromptGalleryConfigState();
+  if (!config) return;
+
+  setPromptGalleryStatus("正在保存展示设置...");
+
+  const response = await fetch("/api/prompt-gallery/admin", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      hiddenImageUrls: config.hiddenImageUrls,
+      customItems: config.customItems
+    })
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.error || "保存提示词展廊配置失败");
+  }
+
+  promptGalleryAdminState.config = result.config;
+  renderPromptGalleryAdmin();
+  setPromptGalleryStatus("提示词展廊展示设置已保存。");
+}
+
+async function uploadPromptGalleryImage() {
+  const file = fields.promptGalleryFile?.files?.[0];
+  if (!file) {
+    throw new Error("请先选择一张图片再上传");
+  }
+
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("读取图片失败"));
+    reader.readAsDataURL(file);
+  });
+
+  const base64Index = dataUrl.indexOf(",");
+  const dataBase64 = base64Index >= 0 ? dataUrl.slice(base64Index + 1) : "";
+
+  if (!dataBase64) {
+    throw new Error("图片内容为空，无法上传");
+  }
+
+  setPromptGalleryStatus("正在上传图片...");
+
+  const response = await fetch("/api/prompt-gallery/admin/upload", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      sourceCollectionId: fields.promptGallerySourceSelect?.value || "",
+      title: fields.promptGalleryTitle?.value?.trim() || "",
+      displayGroup: fields.promptGalleryDisplayGroup?.value?.trim() || "",
+      description: fields.promptGalleryDescription?.value?.trim() || "",
+      fileName: file.name,
+      mimeType: file.type,
+      dataBase64
+    })
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.error || "上传图片失败");
+  }
+
+  promptGalleryAdminState.config = result.config;
+  renderPromptGalleryAdmin();
+
+  if (fields.promptGalleryTitle) fields.promptGalleryTitle.value = "";
+  if (fields.promptGalleryDisplayGroup) fields.promptGalleryDisplayGroup.value = "";
+  if (fields.promptGalleryDescription) fields.promptGalleryDescription.value = "";
+  if (fields.promptGalleryFile) fields.promptGalleryFile.value = "";
+
+  setPromptGalleryStatus("图片已加入提示词展廊。");
+}
+
+async function deletePromptGalleryUpload(itemId) {
+  const response = await fetch(`/api/prompt-gallery/admin/upload/${encodeURIComponent(itemId)}`, {
+    method: "DELETE"
+  });
+
+  const result = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(result.error || "删除上传图片失败");
+  }
+
+  promptGalleryAdminState.config = result.config;
+  renderPromptGalleryAdmin();
+  setPromptGalleryStatus("已删除自定义上传图片。");
 }
 
 async function refreshAiModels(showStatus = true) {
@@ -673,7 +909,39 @@ document.addEventListener("click", (event) => {
     list.splice(index, 1);
     renderRepeater(repeaterKey);
     updateRawJson();
+    return;
   }
+
+  const deleteUploadButton = target.closest("[data-prompt-custom-delete]");
+  if (deleteUploadButton) {
+    const itemId = deleteUploadButton.getAttribute("data-prompt-custom-delete");
+    if (!itemId) return;
+
+    deletePromptGalleryUpload(itemId).catch((error) => {
+      console.error(error);
+      setPromptGalleryStatus(error.message || "删除上传图片失败", true);
+    });
+  }
+});
+
+document.addEventListener("change", (event) => {
+  const target = event.target;
+  if (!(target instanceof HTMLInputElement)) return;
+
+  const imageUrl = target.dataset.promptBaseToggle;
+  if (!imageUrl) return;
+
+  const config = getPromptGalleryConfigState();
+  if (!config) return;
+
+  if (target.checked) {
+    config.hiddenImageUrls = config.hiddenImageUrls.filter((item) => item !== imageUrl);
+  } else if (!config.hiddenImageUrls.includes(imageUrl)) {
+    config.hiddenImageUrls.push(imageUrl);
+  }
+
+  renderPromptGalleryAdmin();
+  setPromptGalleryStatus("展示开关已更新，记得点“保存展示设置”。");
 });
 
 fields.refreshBtn.addEventListener("click", () => {
@@ -694,6 +962,27 @@ fields.refreshAiModelsBtn.addEventListener("click", () => {
   refreshAiModels().catch((error) => {
     console.error(error);
     setAiStatus(error.message || "读取模型列表失败", true);
+  });
+});
+
+fields.refreshPromptGalleryBtn?.addEventListener("click", () => {
+  fetchPromptGalleryAdmin().catch((error) => {
+    console.error(error);
+    setPromptGalleryStatus(error.message || "重新读取提示词展廊失败", true);
+  });
+});
+
+fields.savePromptGalleryBtn?.addEventListener("click", () => {
+  savePromptGalleryConfig().catch((error) => {
+    console.error(error);
+    setPromptGalleryStatus(error.message || "保存提示词展廊配置失败", true);
+  });
+});
+
+fields.promptGalleryUploadBtn?.addEventListener("click", () => {
+  uploadPromptGalleryImage().catch((error) => {
+    console.error(error);
+    setPromptGalleryStatus(error.message || "上传图片失败", true);
   });
 });
 

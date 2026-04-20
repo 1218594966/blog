@@ -13,7 +13,7 @@
   <main class="admin-shell">
     <aside class="admin-sidebar">
       <h1>内容管理</h1>
-      <p>这里可以直接改站点里的名字、标题、简介、项目、文章、社交链接和联系方式，保存后前台会立即读取新内容。</p>
+      <p>这里可以直接改站点里的名字、标题、简介、提示词展廊、项目、社交链接和联系方式，保存后前台会立即读取新内容。</p>
       <a href="/" class="admin-link">返回前台首页</a>
       <form method="post" action="/admin-logout">
         <button type="submit" class="admin-link admin-link-secondary">退出后台</button>
@@ -79,6 +79,52 @@
           <textarea id="aiPlaceholder" rows="3"></textarea>
         </label>
         <div class="admin-inline-status" id="aiStatus"></div>
+      </div>
+
+      <div class="admin-card">
+        <div class="card-header">
+          <h2>提示词展廊管理</h2>
+          <div class="card-header-actions">
+            <button id="refreshPromptGalleryBtn" type="button" class="ghost-btn">重新读取</button>
+            <button id="savePromptGalleryBtn" type="button" class="ghost-btn">保存展示设置</button>
+          </div>
+        </div>
+        <p>可以控制基础图库里哪些图片展示在前台，也可以上传自定义图片并挂到某一组提示词 JSON 下。</p>
+        <div class="admin-inline-status" id="promptGalleryStatus"></div>
+
+        <div class="prompt-admin-grid">
+          <section class="prompt-admin-panel">
+            <h3>上传自定义图片</h3>
+            <div class="admin-grid">
+              <label>挂载到哪组 JSON
+                <select id="promptGallerySourceSelect"></select>
+              </label>
+              <label>前台标题
+                <input id="promptGalleryTitle" type="text" placeholder="可留空，默认沿用原组标题">
+              </label>
+              <label>分组名称
+                <input id="promptGalleryDisplayGroup" type="text" placeholder="例如：定制上新 / 角色组图">
+              </label>
+              <label>图片文件
+                <input id="promptGalleryFile" type="file" accept="image/*">
+              </label>
+            </div>
+            <label>补充说明
+              <textarea id="promptGalleryDescription" rows="4" placeholder="可选，会展示在前台弹窗描述中。"></textarea>
+            </label>
+            <button id="promptGalleryUploadBtn" type="button" class="primary-action">上传到展廊</button>
+          </section>
+
+          <section class="prompt-admin-panel">
+            <h3>基础图库展示开关</h3>
+            <div id="promptGalleryBaseList" class="prompt-admin-collection-list"></div>
+          </section>
+        </div>
+
+        <section class="prompt-admin-panel">
+          <h3>已上传的自定义图片</h3>
+          <div id="promptGalleryCustomList" class="prompt-admin-custom-list"></div>
+        </section>
       </div>
 
       <div class="admin-card">

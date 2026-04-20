@@ -6,8 +6,15 @@ APP_NAME="${APP_NAME:-personblog}"
 BRANCH="${BRANCH:-main}"
 
 cd "${APP_DIR}"
+
+git restore --source=HEAD --staged --worktree package-lock.json 2>/dev/null || git checkout -- package-lock.json 2>/dev/null || true
+
 git pull --ff-only origin "${BRANCH}"
-npm install --omit=dev
+if [ -f package-lock.json ]; then
+  npm ci --omit=dev
+else
+  npm install --omit=dev
+fi
 npm run check
 pm2 startOrReload ecosystem.config.cjs --update-env
 pm2 save

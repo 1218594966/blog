@@ -23,6 +23,8 @@ const CONTENT_PATH = path.join(STORAGE_DIR, "site-content.json");
 const MESSAGES_PATH = path.join(STORAGE_DIR, "messages.json");
 const AI_CONFIG_PATH = path.join(STORAGE_DIR, "ai-config.json");
 const AI_PRIVATE_CONFIG_PATH = path.join(STORAGE_DIR, "ai-config.private.json");
+const PROMPT_GALLERY_CONFIG_PATH = path.join(STORAGE_DIR, "prompt-gallery.config.json");
+const PROMPT_GALLERY_UPLOADS_DIR = path.join(PUBLIC_DIR, "prompt-assets", "admin-uploads");
 const DEFAULT_ADMIN_USERNAME = "admin";
 const DEFAULT_ADMIN_PASSWORD = "change-this-password";
 const DEFAULT_SESSION_SECRET = "change-this-session-secret";
@@ -32,7 +34,7 @@ const SESSION_SECRET = process.env.SESSION_SECRET || DEFAULT_SESSION_SECRET;
 const SESSION_COOKIE_NAME = "personblog_admin";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
 
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 const rateLimitBuckets = new Map();
@@ -331,11 +333,155 @@ function defaultPrivateAiConfig() {
   };
 }
 
+function defaultPromptGalleryConfig() {
+  return {
+    hiddenImageUrls: [],
+    customItems: []
+  };
+}
+
+function sanitizePromptGalleryConfig(rawConfig) {
+  const config = rawConfig && typeof rawConfig === "object" ? rawConfig : {};
+
+  const hiddenImageUrls = Array.isArray(config.hiddenImageUrls)
+    ? [...new Set(config.hiddenImageUrls.filter((item) => typeof item === "string" && item.trim()).map((item) => item.trim()))]
+    : [];
+
+  const customItems = Array.isArray(config.customItems)
+    ? config.customItems
+      .filter((item) => item && typeof item === "object")
+      .map((item) => ({
+        id: typeof item.id === "string" && item.id.trim() ? item.id.trim() : randomUUID(),
+        title: typeof item.title === "string" ? item.title.trim() : "",
+        description: typeof item.description === "string" ? item.description.trim() : "",
+        displayGroup: typeof item.displayGroup === "string" ? item.displayGroup.trim() : "",
+        imageUrl: typeof item.imageUrl === "string" ? item.imageUrl.trim() : "",
+        sourceCollectionId: typeof item.sourceCollectionId === "string" ? item.sourceCollectionId.trim() : ""
+      }))
+      .filter((item) => item.imageUrl)
+    : [];
+
+  return {
+    hiddenImageUrls,
+    customItems
+  };
+}
+
+function readPromptGalleryBase() {
+  return readJson(PROMPT_GALLERY_PATH, {
+    generatedAt: "",
+    collectionCount: 0,
+    collections: []
+  });
+}
+
+function readPromptGalleryConfig() {
+  const config = readJson(PROMPT_GALLERY_CONFIG_PATH, defaultPromptGalleryConfig());
+  return sanitizePromptGalleryConfig(config);
+}
+
+function writePromptGalleryConfig(config) {
+  writeJson(PROMPT_GALLERY_CONFIG_PATH, sanitizePromptGalleryConfig(config));
+}
+
+function getPromptImages(collection) {
+  return Array.isArray(collection?.images) ? collection.images.filter(Boolean) : [];
+}
+
+function buildPromptGalleryResponse() {
+  const baseGallery = readPromptGalleryBase();
+  const config = readPromptGalleryConfig();
+  const hiddenUrls = new Set(config.hiddenImageUrls);
+  const baseCollections = Array.isArray(baseGallery.collections) ? baseGallery.collections : [];
+
+  const filteredCollections = baseCollections
+    .map((collection) => {
+      const images = getPromptImages(collection).filter((image) => !hiddenUrls.has(image.url));
+      if (!images.length) return null;
+
+      const preferredCover = hiddenUrls.has(collection.coverImage) ? images[0]?.url || "" : collection.coverImage;
+
+      return {
+        ...collection,
+        coverImage: preferredCover || images[0]?.url || "",
+        images,
+        imageCount: images.length
+      };
+    })
+    .filter(Boolean);
+
+  const collectionMap = new Map(baseCollections.map((collection) => [collection.id, collection]));
+  const customCollections = config.customItems.map((item, index) => {
+    const sourceCollection = collectionMap.get(item.sourceCollectionId) || filteredCollections[0] || baseCollections[0] || {};
+    const title = item.title || sourceCollection.headline || sourceCollection.title || `自定义图 ${index + 1}`;
+    const folderName = item.displayGroup || sourceCollection.folderName || "自定义上传";
+
+    return {
+      ...sourceCollection,
+      id: `custom-${item.id}`,
+      slug: `custom-${item.id}`,
+      folderName,
+      title,
+      headline: title,
+      description: item.description || sourceCollection.description || "",
+      coverImage: item.imageUrl,
+      images: [
+        {
+          name: `${title}${path.extname(item.imageUrl) || ".png"}`,
+          url: item.imageUrl
+        }
+      ],
+      imageCount: 1,
+      isCustom: true,
+      customItemId: item.id,
+      sourceCollectionId: item.sourceCollectionId || sourceCollection.id || ""
+    };
+  });
+
+  return {
+    generatedAt: baseGallery.generatedAt || new Date().toISOString(),
+    collectionCount: filteredCollections.length + customCollections.length,
+    collections: [...customCollections, ...filteredCollections]
+  };
+}
+
+function getPromptGalleryAdminPayload() {
+  const baseGallery = readPromptGalleryBase();
+  return {
+    gallery: buildPromptGalleryResponse(),
+    baseGallery,
+    config: readPromptGalleryConfig()
+  };
+}
+
+function sanitizeUploadFileName(fileName = "") {
+  const cleaned = path.basename(String(fileName)).replace(/[^\w.\-\u4e00-\u9fa5]+/g, "-");
+  return cleaned || `upload-${Date.now()}.png`;
+}
+
+function resolveImageExtension(fileName, mimeType) {
+  const existingExtension = path.extname(fileName || "").toLowerCase();
+  if (existingExtension) return existingExtension;
+
+  const mimeToExtension = {
+    "image/jpeg": ".jpg",
+    "image/png": ".png",
+    "image/webp": ".webp",
+    "image/gif": ".gif"
+  };
+
+  return mimeToExtension[mimeType] || ".png";
+}
+
 function ensureRuntimeStorage() {
   readJson(CONTENT_PATH, {}, DEFAULT_CONTENT_PATH);
   readJson(MESSAGES_PATH, [], DEFAULT_MESSAGES_PATH);
   readJson(AI_CONFIG_PATH, defaultAiConfig(), DEFAULT_AI_CONFIG_PATH);
   readJson(AI_PRIVATE_CONFIG_PATH, defaultPrivateAiConfig());
+  readJson(PROMPT_GALLERY_CONFIG_PATH, defaultPromptGalleryConfig());
+  if (!fs.existsSync(PROMPT_GALLERY_UPLOADS_DIR)) {
+    fs.mkdirSync(PROMPT_GALLERY_UPLOADS_DIR, { recursive: true });
+  }
   migrateLegacyAiApiKey();
 }
 
@@ -567,13 +713,118 @@ app.get("/api/content", (_req, res) => {
 
 app.get("/api/prompt-gallery", (_req, res) => {
   try {
-    res.json(readJson(PROMPT_GALLERY_PATH, {
-      generatedAt: "",
-      collectionCount: 0,
-      collections: []
-    }));
+    res.json(buildPromptGalleryResponse());
   } catch (error) {
     res.status(500).json({ error: "读取提示词展廊失败", detail: error.message });
+  }
+});
+
+app.get("/api/prompt-gallery/admin", requireAdminAuth, (_req, res) => {
+  try {
+    return res.json(getPromptGalleryAdminPayload());
+  } catch (error) {
+    return res.status(500).json({ error: "读取提示词展廊配置失败", detail: error.message });
+  }
+});
+
+app.put("/api/prompt-gallery/admin", requireAdminAuth, createRateLimit({
+  keyPrefix: "prompt-gallery-save",
+  limit: 20,
+  windowMs: 60 * 1000,
+  message: "提示词展廊保存过于频繁，请稍后再试"
+}), (req, res) => {
+  try {
+    const nextConfig = sanitizePromptGalleryConfig(req.body);
+    writePromptGalleryConfig(nextConfig);
+    return res.json({ ok: true, config: nextConfig });
+  } catch (error) {
+    return res.status(500).json({ error: "保存提示词展廊配置失败", detail: error.message });
+  }
+});
+
+app.post("/api/prompt-gallery/admin/upload", requireAdminAuth, createRateLimit({
+  keyPrefix: "prompt-gallery-upload",
+  limit: 12,
+  windowMs: 60 * 1000,
+  message: "上传过于频繁，请稍后再试"
+}), (req, res) => {
+  try {
+    const fileName = sanitizeUploadFileName(req.body.fileName);
+    const mimeType = typeof req.body.mimeType === "string" ? req.body.mimeType.trim() : "";
+    const title = typeof req.body.title === "string" ? req.body.title.trim() : "";
+    const description = typeof req.body.description === "string" ? req.body.description.trim() : "";
+    const displayGroup = typeof req.body.displayGroup === "string" ? req.body.displayGroup.trim() : "";
+    const sourceCollectionId = typeof req.body.sourceCollectionId === "string" ? req.body.sourceCollectionId.trim() : "";
+    const base64Data = typeof req.body.dataBase64 === "string" ? req.body.dataBase64.trim() : "";
+
+    if (!base64Data) {
+      return res.status(400).json({ error: "缺少图片数据" });
+    }
+
+    const safeMimeType = mimeType.startsWith("image/") ? mimeType : "image/png";
+    const extension = resolveImageExtension(fileName, safeMimeType);
+    const uploadId = randomUUID();
+    const finalFileName = `${Date.now()}-${uploadId}${extension}`;
+    const filePath = path.join(PROMPT_GALLERY_UPLOADS_DIR, finalFileName);
+    const imageBuffer = Buffer.from(base64Data, "base64");
+
+    if (imageBuffer.length > 12 * 1024 * 1024) {
+      return res.status(400).json({ error: "图片不能超过 12MB" });
+    }
+
+    fs.writeFileSync(filePath, imageBuffer);
+
+    const config = readPromptGalleryConfig();
+    const customItem = {
+      id: uploadId,
+      title,
+      description,
+      displayGroup,
+      sourceCollectionId,
+      imageUrl: `/prompt-assets/admin-uploads/${finalFileName}`
+    };
+
+    config.customItems.unshift(customItem);
+    writePromptGalleryConfig(config);
+
+    return res.json({
+      ok: true,
+      item: customItem,
+      config
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "上传提示词展图失败", detail: error.message });
+  }
+});
+
+app.delete("/api/prompt-gallery/admin/upload/:itemId", requireAdminAuth, createRateLimit({
+  keyPrefix: "prompt-gallery-delete",
+  limit: 20,
+  windowMs: 60 * 1000,
+  message: "删除过于频繁，请稍后再试"
+}), (req, res) => {
+  try {
+    const itemId = typeof req.params.itemId === "string" ? req.params.itemId.trim() : "";
+    const config = readPromptGalleryConfig();
+    const item = config.customItems.find((entry) => entry.id === itemId);
+
+    if (!item) {
+      return res.status(404).json({ error: "未找到对应上传图片" });
+    }
+
+    const relativeUrl = item.imageUrl.replace(/^\/+/, "").replaceAll("/", path.sep);
+    const absolutePath = path.join(PUBLIC_DIR, relativeUrl);
+
+    if (absolutePath.startsWith(PROMPT_GALLERY_UPLOADS_DIR) && fs.existsSync(absolutePath)) {
+      fs.unlinkSync(absolutePath);
+    }
+
+    config.customItems = config.customItems.filter((entry) => entry.id !== itemId);
+    writePromptGalleryConfig(config);
+
+    return res.json({ ok: true, config });
+  } catch (error) {
+    return res.status(500).json({ error: "删除上传图片失败", detail: error.message });
   }
 });
 

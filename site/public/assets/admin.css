@@ -267,6 +267,158 @@ select:focus {
   color: var(--accent);
 }
 
+.card-header-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primary-action {
+  border: 1px solid rgba(212, 168, 83, 0.3);
+  background: rgba(212, 168, 83, 0.12);
+  color: var(--accent);
+  padding: 12px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+}
+
+.prompt-admin-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.92fr) minmax(0, 1.08fr);
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.prompt-admin-panel {
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 18px;
+}
+
+.prompt-admin-panel h3 {
+  margin: 0 0 14px;
+  font-size: 18px;
+}
+
+.prompt-admin-collection-list,
+.prompt-admin-custom-list {
+  display: grid;
+  gap: 14px;
+}
+
+.prompt-admin-collection {
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px;
+}
+
+.prompt-admin-collection-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.prompt-admin-collection-header h4,
+.prompt-admin-upload-info h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.prompt-admin-collection-header span,
+.prompt-admin-upload-tags span,
+.prompt-admin-image-meta span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.prompt-admin-image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.prompt-admin-image-card {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--panel-border);
+  background: rgba(255, 255, 255, 0.02);
+  margin: 0;
+}
+
+.prompt-admin-image-card input {
+  width: auto;
+  margin: 0;
+}
+
+.prompt-admin-image-preview {
+  aspect-ratio: 1 / 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+  display: grid;
+  place-items: center;
+}
+
+.prompt-admin-image-preview img,
+.prompt-admin-upload-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.prompt-admin-image-meta {
+  display: grid;
+  gap: 4px;
+}
+
+.prompt-admin-upload-card {
+  display: grid;
+  grid-template-columns: 144px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px;
+}
+
+.prompt-admin-upload-media {
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.prompt-admin-upload-info {
+  min-width: 0;
+}
+
+.prompt-admin-upload-info p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.prompt-admin-upload-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.prompt-admin-upload-tags span {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--panel-border);
+}
+
 @media (max-width: 980px) {
   .admin-shell {
     grid-template-columns: 1fr;
@@ -281,6 +433,11 @@ select:focus {
 
   .admin-grid,
   .repeater-item-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .prompt-admin-grid,
+  .prompt-admin-upload-card {
     grid-template-columns: 1fr;
   }
 }

@@ -11,6 +11,16 @@ let aiConversation = [];
 let promptGallery = null;
 let promptCarouselIntervals = [];
 
+if ("scrollRestoration" in window.history) {
+  window.history.scrollRestoration = "manual";
+}
+
+window.addEventListener("load", () => {
+  if (!window.location.hash) {
+    window.scrollTo(0, 0);
+  }
+}, { once: true });
+
 const els = {
   scrollProgress: document.getElementById("scrollProgress"),
   loader: document.getElementById("loader"),
@@ -467,14 +477,7 @@ function renderPromptGallery() {
   clearPromptCarouselIntervals();
 
   const collections = Array.isArray(promptGallery?.collections)
-    ? [...promptGallery.collections].sort((left, right) => {
-      const leftPriority = left.folderName?.includes("三视图") ? 0 : 1;
-      const rightPriority = right.folderName?.includes("三视图") ? 0 : 1;
-      if (leftPriority !== rightPriority) {
-        return leftPriority - rightPriority;
-      }
-      return 0;
-    })
+    ? [...promptGallery.collections]
     : [];
 
   if (!collections.length) {
@@ -521,32 +524,13 @@ function renderPromptGallery() {
             `).join("")}
           </div>
         </div>
-        <div class="prompt-stage-toolbar">
-          <div>
-            <div class="prompt-panel-label">自动图像流廊</div>
-            <div class="prompt-stage-status" data-prompt-status></div>
-          </div>
-          <div class="prompt-stage-actions">
-            <button type="button" class="prompt-stage-nav" data-prompt-nav="-1" aria-label="上一张">←</button>
-            <button type="button" class="prompt-stage-nav" data-prompt-nav="1" aria-label="下一张">→</button>
-          </div>
-        </div>
-        <div class="prompt-stage-progress"><span data-prompt-progress></span></div>
-        <div class="prompt-thumb-rail" data-prompt-rail>
-          ${galleryItems.map((item, index) => `
-            <button type="button" class="prompt-thumb" data-prompt-thumb="${index}" aria-label="切换到 ${escapeHtml(item.readableName)}">
-              <img src="${item.image.url}" alt="${escapeHtml(item.readableName)}" loading="lazy">
-              <span>${escapeHtml(item.readableName)}</span>
-            </button>
-          `).join("")}
-        </div>
       </div>
       <div class="prompt-flow-right">
         <div class="prompt-json-panel" data-json-panel>
           <div class="prompt-json-head">
             <div>
               <div class="prompt-panel-label">JSON 结构</div>
-              <div class="prompt-json-status" data-prompt-json-status></div>
+              <div class="prompt-json-title" data-prompt-json-title></div>
             </div>
             <button type="button" class="prompt-panel-action" data-prompt-action="json">全屏查看</button>
           </div>
@@ -558,13 +542,9 @@ function renderPromptGallery() {
 
   const track = gallery.querySelector("[data-prompt-track]");
   const cards = Array.from(gallery.querySelectorAll("[data-prompt-card]"));
-  const thumbs = [];
-  const status = null;
-  const jsonStatus = null;
-  const progressBar = null;
+  const jsonTitle = gallery.querySelector("[data-prompt-json-title]");
   const codeBlock = gallery.querySelector("[data-prompt-code]");
   const jsonPanel = gallery.querySelector("[data-json-panel]");
-  const thumbRail = null;
   let activeIndex = initialIndex;
 
   function applyActiveItem(nextIndex, options = {}) {
@@ -577,16 +557,11 @@ function renderPromptGallery() {
       card.classList.toggle("is-active", Number(card.getAttribute("data-prompt-index")) === activeIndex);
     });
 
-    if (false) {
-      status.textContent = `${activeIndex + 1} / ${galleryItems.length} · ${activeItem.readableName}`;
-    }
-
-    if (jsonStatus) {
-      jsonStatus.textContent = `${activeCollection.folderName} · ${activeCollection.headline || activeCollection.title}`;
-    }
-
-    if (progressBar) {
-      progressBar.style.width = `${((activeIndex + 1) / galleryItems.length) * 100}%`;
+    if (jsonTitle) {
+      jsonTitle.textContent = [
+        activeItem.collection.folderName || activeItem.collection.title || "",
+        getPromptDisplayName(activeItem)
+      ].filter(Boolean).join(" · ");
     }
 
     if (jsonPanel) {
@@ -600,20 +575,6 @@ function renderPromptGallery() {
       codeBlock.classList.add("is-animating");
     }
   }
-
-  thumbs.forEach((thumbButton) => {
-    thumbButton.addEventListener("click", () => {
-      const thumbIndex = Number(thumbButton.getAttribute("data-prompt-thumb"));
-      applyActiveItem(Number.isFinite(thumbIndex) ? thumbIndex : 0);
-    });
-  });
-
-  gallery.querySelectorAll("[data-prompt-nav]").forEach((navButton) => {
-    navButton.addEventListener("click", () => {
-      const direction = Number(navButton.getAttribute("data-prompt-nav"));
-      applyActiveItem(activeIndex + (Number.isFinite(direction) ? direction : 1));
-    });
-  });
 
   gallery.querySelector("[data-prompt-action='json']")?.addEventListener("click", () => {
     const activeItem = galleryItems[activeIndex];
@@ -795,7 +756,7 @@ function applyAiSectionConfig() {
     els.aiChatInput.placeholder = aiPublicConfig.placeholder || "想问点什么？";
   }
   if (!aiPublicConfig?.configured) {
-    setAiStatus("AI 妯″瀷灏氭湭閰嶇疆锛屽彲鍦ㄥ悗鍙板～鍐欏熀鏈厤缃悗鍚敤銆?");
+    setAiStatus("AI 区域尚未配置接口，暂时只展示静态面板。");
   }
 }
 
@@ -813,8 +774,8 @@ async function refreshAiModels(showStatus = true) {
   if (!els.aiModelSelect) return;
 
   if (!aiPublicConfig?.configured) {
-    els.aiModelSelect.innerHTML = '<option value="">鏆傛湭閰嶇疆妯″瀷</option>';
-    setAiStatus("AI 妯″瀷灏氭湭閰嶇疆锛屽彲鍦ㄥ悗鍙板～鍐欍€?");
+    els.aiModelSelect.innerHTML = '<option value="">尚未配置模型</option>';
+    setAiStatus("AI 区域尚未配置接口，请先在后台填写 Base URL 和 API Key。");
     return;
   }
 
