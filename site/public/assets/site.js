@@ -36,6 +36,10 @@ const els = {
   heroPrefix: document.getElementById("heroPrefix"),
   heroHighlight: document.getElementById("heroHighlight"),
   heroSuffix: document.getElementById("heroSuffix"),
+  heroStageEyebrow: document.getElementById("heroStageEyebrow"),
+  heroStageTitle: document.getElementById("heroStageTitle"),
+  heroStageDescription: document.getElementById("heroStageDescription"),
+  heroStageStats: document.getElementById("heroStageStats"),
   heroTags: document.getElementById("heroTags"),
   typed: document.getElementById("typed"),
   statsBar: document.getElementById("statsBar"),
@@ -296,6 +300,46 @@ function renderHero() {
     siteContent.hero.tags.forEach((tag) => {
       els.heroTags.appendChild(createElement("span", "hero-tag", tag));
     });
+  }
+
+  const featuredCollection = Array.isArray(promptGallery?.collections)
+    ? promptGallery.collections.find((collection) => getPromptImages(collection).length)
+    : null;
+
+  if (els.heroStageEyebrow) {
+    els.heroStageEyebrow.textContent = featuredCollection?.folderName || "Prompt Portfolio";
+  }
+
+  if (els.heroStageTitle) {
+    els.heroStageTitle.textContent = featuredCollection?.headline || featuredCollection?.title || "把提示词、成图与结构整理成一个真正能展示的系统";
+  }
+
+  if (els.heroStageDescription) {
+    els.heroStageDescription.textContent = featuredCollection?.description || "这里不只是静态图片集合，而是把作品、JSON 结构和后续可扩展入口整合成一套持续更新的内容系统。";
+  }
+
+  if (els.heroStageStats) {
+    const heroMetrics = [
+      {
+        value: String(Array.isArray(promptGallery?.collections) ? promptGallery.collections.length : 0).padStart(2, "0"),
+        label: "提示词主题"
+      },
+      {
+        value: String(siteContent.projects?.length || 0).padStart(2, "0"),
+        label: "研究模块"
+      },
+      {
+        value: String(siteContent.contact?.socials?.length || 0).padStart(2, "0"),
+        label: "联系入口"
+      }
+    ];
+
+    els.heroStageStats.innerHTML = heroMetrics.map((item) => `
+      <article class="hero-signal-card">
+        <div class="hero-signal-value">${escapeHtml(item.value)}</div>
+        <div class="hero-signal-label">${escapeHtml(item.label)}</div>
+      </article>
+    `).join("");
   }
 
   phrases = siteContent.hero.typedPhrases || [];

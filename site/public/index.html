@@ -39,22 +39,33 @@
 
   <section class="hero" id="hero">
     <canvas id="particleCanvas"></canvas>
-    <div class="hero-content">
-      <div class="hero-label" id="heroLabel"></div>
-      <h1 class="hero-title">
-        <span id="heroPrefix"></span>
-        <span class="highlight" id="heroHighlight"></span>
-      </h1>
-      <div class="hero-subline" id="heroSuffix"></div>
-      <div class="hero-subtitle">
-        <span id="typed"></span><span class="typed-cursor">|</span>
+    <div class="hero-grid">
+      <div class="hero-content">
+        <div class="hero-label" id="heroLabel"></div>
+        <h1 class="hero-title">
+          <span id="heroPrefix"></span>
+          <span class="highlight" id="heroHighlight"></span>
+        </h1>
+        <div class="hero-subline" id="heroSuffix"></div>
+        <div class="hero-subtitle">
+          <span id="typed"></span><span class="typed-cursor">|</span>
+        </div>
+        <div class="hero-actions">
+          <a href="#prompt-gallery" class="hero-action hero-action-primary">看看我的提示词资产</a>
+          <a href="#projects" class="hero-action">最近在研究什么</a>
+          <a href="#contact" class="hero-action">来和我交流</a>
+        </div>
+        <div class="hero-tags" id="heroTags"></div>
       </div>
-      <div class="hero-actions">
-        <a href="#prompt-gallery" class="hero-action hero-action-primary">看看我的提示词资产</a>
-        <a href="#projects" class="hero-action">最近在研究什么</a>
-        <a href="#contact" class="hero-action">来和我交流</a>
-      </div>
-      <div class="hero-tags" id="heroTags"></div>
+      <aside class="hero-stage reveal stagger-2" aria-label="精选内容概览">
+        <div class="hero-stage-card hero-stage-card-primary">
+          <div class="hero-stage-kicker">Curated Highlight</div>
+          <div class="hero-stage-eyebrow" id="heroStageEyebrow"></div>
+          <h2 class="hero-stage-title" id="heroStageTitle"></h2>
+          <p class="hero-stage-description" id="heroStageDescription"></p>
+        </div>
+        <div class="hero-stage-stack" id="heroStageStats"></div>
+      </aside>
     </div>
     <div class="hero-scroll">
       <span>向下滚动</span>

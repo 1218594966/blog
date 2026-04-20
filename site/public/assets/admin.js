@@ -43,8 +43,10 @@ const fields = {
   promptGalleryDisplayGroup: document.getElementById("promptGalleryDisplayGroup"),
   promptGalleryDescription: document.getElementById("promptGalleryDescription"),
   promptGalleryFile: document.getElementById("promptGalleryFile"),
+  promptGalleryPreview: document.getElementById("promptGalleryPreview"),
   promptGalleryUploadBtn: document.getElementById("promptGalleryUploadBtn"),
   promptGalleryBaseList: document.getElementById("promptGalleryBaseList"),
+  promptGalleryVisibleList: document.getElementById("promptGalleryVisibleList"),
   promptGalleryCustomList: document.getElementById("promptGalleryCustomList"),
   rawJson: document.getElementById("rawJson"),
   refreshBtn: document.getElementById("refreshBtn"),
@@ -244,22 +246,69 @@ function fillPromptGallerySourceOptions() {
     ? promptGalleryAdminState.baseGallery.collections
     : [];
 
-  fields.promptGallerySourceSelect.innerHTML = collections.map((collection) => {
+  const options = collections.map((collection) => {
     const label = collection.headline || collection.title || collection.folderName || collection.id;
     return `<option value="${escapeHtml(collection.id)}">${escapeHtml(label)}</option>`;
   }).join("");
+
+  fields.promptGallerySourceSelect.innerHTML = options || '<option value="">暂无可挂载的 JSON 分组</option>';
+  fields.promptGallerySourceSelect.disabled = !collections.length;
+}
+
+function renderPromptGalleryPreview() {
+  if (!fields.promptGalleryPreview) return;
+
+  const file = fields.promptGalleryFile?.files?.[0];
+  if (!file) {
+    fields.promptGalleryPreview.className = "prompt-upload-preview empty-state";
+    fields.promptGalleryPreview.innerHTML = "选择图片后会在这里预览。";
+    return;
+  }
+
+  const objectUrl = URL.createObjectURL(file);
+  fields.promptGalleryPreview.className = "prompt-upload-preview";
+  fields.promptGalleryPreview.innerHTML = `
+    <img src="${escapeHtml(objectUrl)}" alt="${escapeHtml(file.name)}">
+    <div class="prompt-upload-preview-meta">
+      <strong>${escapeHtml(file.name)}</strong>
+      <span>${Math.max(1, Math.round(file.size / 1024))} KB</span>
+    </div>
+  `;
 }
 
 function renderPromptGalleryAdmin() {
-  if (!fields.promptGalleryBaseList || !fields.promptGalleryCustomList) return;
+  if (!fields.promptGalleryBaseList || !fields.promptGalleryCustomList || !fields.promptGalleryVisibleList) return;
 
   const config = getPromptGalleryConfigState();
   const hiddenUrls = new Set(config?.hiddenImageUrls || []);
   const collections = Array.isArray(promptGalleryAdminState?.baseGallery?.collections)
     ? promptGalleryAdminState.baseGallery.collections
     : [];
+  const visibleCollections = Array.isArray(promptGalleryAdminState?.gallery?.collections)
+    ? promptGalleryAdminState.gallery.collections
+    : [];
 
   fillPromptGallerySourceOptions();
+
+  if (!visibleCollections.length) {
+    fields.promptGalleryVisibleList.innerHTML = '<div class="empty-state">当前前台没有可展示的提示词图片。</div>';
+  } else {
+    fields.promptGalleryVisibleList.innerHTML = visibleCollections.flatMap((collection) => {
+      const title = collection.headline || collection.title || collection.folderName || collection.id;
+      return getPromptImages(collection).map((image) => `
+        <article class="prompt-admin-visible-card">
+          <div class="prompt-admin-visible-media">
+            <img src="${escapeHtml(image.url)}" alt="${escapeHtml(image.name || title)}" loading="lazy">
+          </div>
+          <div class="prompt-admin-visible-info">
+            <strong>${escapeHtml(title)}</strong>
+            <span>${escapeHtml(collection.folderName || "未分组")}</span>
+            <em>${collection.isCustom ? "自定义上传" : "基础图库"}</em>
+          </div>
+        </article>
+      `);
+    }).join("");
+  }
 
   if (!collections.length) {
     fields.promptGalleryBaseList.innerHTML = '<div class="empty-state">暂时没有可管理的基础图库。</div>';
@@ -276,6 +325,7 @@ function renderPromptGalleryAdmin() {
             </div>
             <div class="prompt-admin-image-meta">
               <strong>${escapeHtml(image.name || "未命名图片")}</strong>
+              <em>${escapeHtml(collection.folderName || title)}</em>
               <span>${visible ? "前台显示中" : "已隐藏"}</span>
             </div>
           </label>
@@ -603,10 +653,28 @@ async function fetchPromptGalleryAdmin() {
 
   promptGalleryAdminState = await response.json();
   renderPromptGalleryAdmin();
+  const visibleCount = Array.isArray(promptGalleryAdminState?.gallery?.collections)
+    ? promptGalleryAdminState.gallery.collections.reduce((total, collection) => total + getPromptImages(collection).length, 0)
+    : 0;
+  setPromptGalleryStatus(`已加载 ${visibleCount} 张当前展示图片。`);
 }
 
 async function refreshAll() {
-  await Promise.all([fetchContent(), fetchMessages(), fetchAiConfig(), fetchPromptGalleryAdmin()]);
+  const results = await Promise.allSettled([
+    fetchContent(),
+    fetchMessages(),
+    fetchAiConfig(),
+    fetchPromptGalleryAdmin()
+  ]);
+
+  const failed = results
+    .filter((result) => result.status === "rejected")
+    .map((result) => result.reason?.message)
+    .filter(Boolean);
+
+  if (failed.length) {
+    fields.saveStatus.textContent = failed[0];
+  }
 }
 
 async function savePromptGalleryConfig() {
@@ -631,8 +699,7 @@ async function savePromptGalleryConfig() {
     throw new Error(result.error || "保存提示词展廊配置失败");
   }
 
-  promptGalleryAdminState.config = result.config;
-  renderPromptGalleryAdmin();
+  await fetchPromptGalleryAdmin();
   setPromptGalleryStatus("提示词展廊展示设置已保存。");
 }
 
@@ -640,6 +707,10 @@ async function uploadPromptGalleryImage() {
   const file = fields.promptGalleryFile?.files?.[0];
   if (!file) {
     throw new Error("请先选择一张图片再上传");
+  }
+
+  if (!fields.promptGallerySourceSelect?.value) {
+    throw new Error("请先选择要挂载的 JSON 分组");
   }
 
   const dataUrl = await new Promise((resolve, reject) => {
@@ -679,13 +750,13 @@ async function uploadPromptGalleryImage() {
     throw new Error(result.error || "上传图片失败");
   }
 
-  promptGalleryAdminState.config = result.config;
-  renderPromptGalleryAdmin();
+  await fetchPromptGalleryAdmin();
 
   if (fields.promptGalleryTitle) fields.promptGalleryTitle.value = "";
   if (fields.promptGalleryDisplayGroup) fields.promptGalleryDisplayGroup.value = "";
   if (fields.promptGalleryDescription) fields.promptGalleryDescription.value = "";
   if (fields.promptGalleryFile) fields.promptGalleryFile.value = "";
+  renderPromptGalleryPreview();
 
   setPromptGalleryStatus("图片已加入提示词展廊。");
 }
@@ -700,8 +771,7 @@ async function deletePromptGalleryUpload(itemId) {
     throw new Error(result.error || "删除上传图片失败");
   }
 
-  promptGalleryAdminState.config = result.config;
-  renderPromptGalleryAdmin();
+  await fetchPromptGalleryAdmin();
   setPromptGalleryStatus("已删除自定义上传图片。");
 }
 
@@ -964,6 +1034,8 @@ fields.refreshAiModelsBtn.addEventListener("click", () => {
     setAiStatus(error.message || "读取模型列表失败", true);
   });
 });
+
+fields.promptGalleryFile?.addEventListener("change", renderPromptGalleryPreview);
 
 fields.refreshPromptGalleryBtn?.addEventListener("click", () => {
   fetchPromptGalleryAdmin().catch((error) => {

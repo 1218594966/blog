@@ -112,6 +112,7 @@
             <label>补充说明
               <textarea id="promptGalleryDescription" rows="4" placeholder="可选，会展示在前台弹窗描述中。"></textarea>
             </label>
+            <div id="promptGalleryPreview" class="prompt-upload-preview empty-state">选择图片后会在这里预览。</div>
             <button id="promptGalleryUploadBtn" type="button" class="primary-action">上传到展廊</button>
           </section>
 
@@ -120,6 +121,11 @@
             <div id="promptGalleryBaseList" class="prompt-admin-collection-list"></div>
           </section>
         </div>
+
+        <section class="prompt-admin-panel">
+          <h3>当前前台展示清单</h3>
+          <div id="promptGalleryVisibleList" class="prompt-admin-visible-list"></div>
+        </section>
 
         <section class="prompt-admin-panel">
           <h3>已上传的自定义图片</h3>
